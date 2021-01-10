@@ -1,0 +1,300 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<title>Programación Paralela - Capítulo I - Introducción y Fundamentos</title>
+
+		<link rel="stylesheet" href="/home/graeme/Documents/talks/reveal.js/css/reset.css">
+		<link rel="stylesheet" href="/home/graeme/Documents/talks/reveal.js/css/reveal.css">
+		<link rel="stylesheet" href="/home/graeme/Documents/talks/reveal.js/css/theme/white.css">
+
+		<!-- Theme used for syntax highlighting of code -->
+		<link rel="stylesheet" href="/home/graeme/Documents/talks/reveal.js/lib/css/monokai.css">
+
+		<!-- Printing and PDF exports -->
+		<script>
+			var link = document.createElement( 'link' );
+			link.rel = 'stylesheet';
+			link.type = 'text/css';
+			link.href = window.location.search.match( /print-pdf/gi ) ? '/home/graeme/Documents/talks/reveal.js/css/print/pdf.css' : '/home/graeme/Documents/talks/reveal.js/css/print/paper.css';
+			document.getElementsByTagName( 'head' )[0].appendChild( link );
+		</script>
+
+        <style>
+            .container{
+                        display: flex;
+                      }
+            .col{
+                      flex: 1;
+                }
+            .reveal section p {
+                      display: inline-block;
+                      font-size: 0.6em;
+                      line-height: 1.2em;
+                      vertical-align: top;
+            }
+            .reveal section li {
+                      font-size: 0.6em;
+            }
+            .reveal section img {
+                      border: none;
+            }
+        </style>
+
+	</head>
+	<body>
+		<div class="reveal">
+			<div class="slides">
+
+                <section><h1>Programación Paralela</h1>
+                </section>
+
+                <section><h2>Información sobre el curso</h2>
+                <p><ul><li>Libro: "Parallel Programming", Schmidt, Gonzalez-Dominguez, Hundt, Schlarb. (Disponible en el Google Classroom)</li>
+                       <li>El libro usa el lenguaje C++, nosotros usaremos C (no es muy difícil traduccir los ejemplos de C++ a C)</li>
+                       <li>El horario oficial de la clase es martes 8.30-10.00, 10.15-11.45.</li>
+                       <li>Propongo tener una reunión el martes a las 9.30 (1 hora aprox.)</li>
+                       <li>La idea es que ustedes estudian el libro y trabajan en las tareas!</li>
+                       <li>Las evaluaciones serán en forma de tareas.</li></ul>
+                </section>
+
+                <section><h2>Programa</h2>
+                <p><ul><li>Introduction</li>
+                       <li>Theoretical Background</li>
+                       <li>Modern Acrhitectures</li>
+                       <li>OpenMP</li>
+                       <li>CUDA</li>
+                       <li>MPI</li></ul>
+                </section>
+
+                <section><h1>Introduction</h1>
+                </section>
+
+				<section><h3>Some important initial concepts</h3>
+                <p><b>Speedup</b>: $S = T(1)/T(p)$ where $T(p)$ is the execution time on $p$ processors.</p>
+                <p><b>Efficiency</b>: $E = S/p = T(1)/(T(p) \times p)$</p>
+                <p><b>Cost</b>: $C = T(p) \times p$</p>
+                <p><b>Scalability, strong</b>: efficiency changes for fixed data size, varying $p$.</p>
+                <p><b>Scalability, weak</b>: efficiency changes for varying data size, varying $p$.</p>
+                <p><b>Computation-to-communication ratio</b>: time spent calculating divided by time spent communicating.</p>
+                </section>
+
+                <section><h3>Simple example: summation of an array</h3>
+                <p>Calculate $\sum_{i=0}^{n-1} A[i]$ on $p$ processing elements (PE). Assumptions:</p>
+                <p><ul><li>Computation: each PE adds two numbers in its local memory in $1$ time unit.</li>
+                       <li>Communication: each PE can send data from its local memory to another PE's local memory in $3$ time units (independent of data size).</li>
+                       <li>Input/output: data initially on PE #0, at completion result should be gathered to PE #0.</li>
+                       <li>Synchronization: all PEs operate in lock-step (they all compute, or they all communicate).</li></ul></p>
+                </section>
+
+                <section><h4>Simple example: summation of an array</h4>
+                <p>Sequential code: adds $n$ numbers in $n-1$ time units. $T(1,n) = n-1$.</p>
+                <p>We assume that $n = 2^k$ where $k$ is a positive integer.</p>
+                </section>
+
+                <section><h4>Simple example: summation of an array</h4>
+                <p>Parallel code on $p=2$ PEs:</p>
+                <p><ul><li>PE #0 sends half the array to PE #1. $3$ time units.</li>
+                       <li>Both PEs compute partial sum of $n/2$ elements. $n/2 - 1$ time units.</li>
+                       <li>PE #1 sends partial sum back to PE #0. $3$ time units.</li>
+                       <li>PE #0 adds the two partial sums. $1$ time unit.</li>
+                       <li>Total time: $T(2,n) = 3 + n/2 - 1 + 3 + 1$. For $n=1024$, $T(2,1024) = 518$ so the speedup is $T(1,1024)/T(2,1024) = 1.975$ and the efficiency is $98.75%$.</li></ul></p>
+                </section>
+
+                <section><h4>Simple example: summation of an array</h4>
+                <p>Parallel code on $p=4$ PEs:</p>
+                <p><ul><li>PE #0 sends half the array to PE #1. $3$ time units.</li>
+                       <li>PE #0 and PE #1 each sends quarter of the array to PEs #2 and #3. $3$ time units.</li>
+                       <li>Each PE computes partial sum of $n/4$ elements. $n/4 - 1$ time units.</li>
+                       <li>PEs #2 and #3 send their partial sums back to PEs #0 and #1. $3$ time units.</li>
+                       <li>PEs #0 and #1 add their partial sums. $1$ time unit.</li>
+                       <li>PE #1 sends its partial sum to PE #0. $3$ time units.</li>
+                       <li>PE #0 adds the two partial sums. $1$ time unit.</li>
+                       <li>Total time: $T(4,n) = 3 + 3 + n/4 - 1 + 3 + 1 + 3 + 1$. For $n=1024$, $T(4,1024) = 269$ so the speedup is $T(1,1024)/T(4,1024) = 3.803$ and the efficiency is $95.07%$.</li></ul></p>
+                </section>
+
+                <section><h4>Simple example: summation of an array</h4>
+                <p>Parallel code on $p=8$ PEs:</p>
+                <p>Total time: $T(8,n) = 3 + 3 + 3 + n/8 - 1 + 3 + 1 + 3 + 1 + 3 + 1$. For $n=1024$, $T(8,1024) = 148$ so the speedup is $T(1,1024)/T(8,1024) = 6.91$ and the efficiency is $86%$.</p>
+                </section>
+
+                <section><h4>Simple example: summation of an array</h4>
+                <p>Parallel code on $p = 2^q$ PEs:</p>
+                <p><ul><li>Data distribution time: $3q$</li>
+                       <li>Computing local sums: $n/p - 1 = 2^{k-q} - 1$</li>
+                       <li>Collecting partial results: $3q$</li>
+                       <li>Adding partial results: $q$</li></ul></p>
+                <p>Total time: $T(p,n) = T(2^q,2^k) = 3q + 2^{k-q} - 1 + 3q + q = 2^{k-q} - 1 + 7q$.</p>
+                <p>When $p \ll n$ then $k \gg q$ and the compute time term $2^{k-q}$ dominates (efficiency is high).</p>
+                <p>When $p \approx n$ then $k \approx q$ and the communication term $7q$ dominates (efficiency is low).</p>
+                </section>
+
+                <section><h4>Simple example: summation of an array</h4>
+                <img src="figs_introduccion/strong_scalability_figure.png" width="800">
+                <p>Algorithm is not strongly scalable</p>
+                </section>
+
+                <section><h4>Simple example: summation of an array</h4>
+                <p>Increase data size (from $1024$ to $524,288$) when we increase number of processing elements (from $1$ to $512$).</p>
+                </section>
+
+                <section><h4>Simple example: summation of an array</h4>
+                <img src="figs_introduccion/weak_scalability_figure.png">
+                <p>Algorithm is <b>weakly</b> scalable</p>
+                </section>
+
+                <section><h4>General case, computation-to-communication ratio</h4>
+                <p>$\alpha > 0$ is the time to compute, $\beta > 0$ is the time to communicate (before we had $\alpha = 1$, $\beta = 3$). General formula for the runtime is:</p>
+                <p>$T_{\alpha,\beta}(2^q,2^k) = \beta q + \alpha (2^{k-q} - 1) + \beta q + \alpha q = 2\beta q + \alpha (2^{k-q} - 1 + q)$</p>
+                <p>Speedup: $$S_{\alpha,\beta}(2^q,2^k) = \frac{T_{\alpha,\beta}(2^0,2^k)}{T_{\alpha,\beta}(2^q,2^k)} = \frac{\alpha(2^k - 1)}{2\beta q + \alpha (2^{k-q} - 1 + q)}$$</p>
+                </section>
+
+                <section><h4>General case, computation-to-communication ratio</h4>
+                <p>Computation-to-communication ratio: $\gamma = \alpha/\beta$. In the limit $\gamma \to 0$ the speedup tends to zero (for $q > 0$):</p>
+                <p>$S_{\gamma}(2^q,2^k) = \frac{\gamma(2^k - 1)}{2q + \gamma(2^{k-q} - 1 + q)}$ and $\lim_{\gamma \to 0} S_{\gamma}(2^q,2^k) = 0$.</p>
+                </section>
+
+                <section><h4>General case, computation-to-communication ratio</h4>
+                <p>Assuming $k > 0$, $A(k) = 2^k - 1 > 0$ and $B(q,k) = 2^{k-q} - 1 + q > 0$ we have:</p>
+                <p>$\frac{d}{d\gamma} S_{\gamma}(2^q,2^k) = \frac{d}{d\gamma} \frac{\gamma A(k)}{2q + \gamma B(q,k)} = \frac{2qA(k)}{(2q + \gamma B(q,k))^2} > 0$</p>
+                <p>Decreasing $\gamma$ decreases $S$ independently of the number of processing elements (i.e. more communication time leads to less speedup).</p>
+                </section>
+
+                <section><h4>General case, maximum speedup</h4>
+                <p>Taking $S_{\gamma}(2^q,2^k)$ as a function of $q$, there is a local maximum at $p = \frac{\gamma \ln 2}{2+\gamma}n$:</p>
+                <p>$\frac{d}{dq} S_{\gamma}(2^q,2^k) = \frac{d}{dq} \frac{\gamma A(k)}{2q + \gamma (2^{k-q} - 1 + q)} = -\frac{\gamma A(k)(2-\gamma 2^{k-q}\ln 2 + \gamma)}{(2q + \gamma (2^{k-q} - 1 + q))^2} \stackrel{!}{=} 0$</p>
+                <p>So $2 + \gamma - \gamma 2^{k-q} \ln 2 \stackrel{!}{=} 0$ implies that $2^q = \frac{\gamma \ln 2}{2 + \gamma}2^k$.</p>
+                <p>For $\gamma = 1/3$ and $n = 1024$ as in our example, $p \approx 100$ gives optimal speedup.</p>
+                </section>
+
+                <section><h4>Conclusions from this example</h4>
+                <p><ul><li>Speedup depends on both the number of processing elements and $\gamma$.</li>
+                       <li>Speedup usually increases as more PEs are used, up to a local maximum. Beyond that communication overheads reduce efficiency.</li>
+                       <li>Optimal speedup depends on $\gamma$. Longer communication times implies fewer PEs should be used.</li>
+                       <li>Parallelisation efficiency depends on number of PEs and $\gamma$. It is a monotonic function in both parameters.</li></ul></p>
+                </section>
+
+                <section><h3>Parallelism basics: distributed memory systems</h3>
+                <p>Each PE has access to its local memory only. To access data stored on another PE's memory we require an explicit communication step.</p>
+                <p>Distributed memory systems have CPUs connected through an interconnection network (Infiniband, ethernet).</p>
+                <p>Remote data access may be <i>point-to-point</i> communication between two CPUs, or <i>collective</i> communication among groups of CPUs.</p>
+                <p>Point-to-point example: CPU 1 calls a function to send data to CPU 2, CPU 2 calls a function to receive that data.</p>
+                <p>Collective examples: broadcasting data from one CPU to all others, computing global sum of a variable stored on all CPUs.</p>
+                </section>
+
+                <section><h4>Distributed memory systems</h4>
+                <p>For parallel programming on distributed memory systems the most common solution is MPI (Message Passing Interface). We will study this later.</p>
+                <p>MPI creates a fixed number of processes at start-up (e.g. one process per CPU).</p>
+                <p>Point-to-point data exchanges between two processes are implemented using MPI_Send and MPI_Recv commands, while collective communication is implemented with MPI_Bcast, MPI_Reduce, MPI_Gather, MPI_Scatter.</p>
+                </section>
+
+                <section><h4>Distributed memory systems, data partitioning</h4>
+                <p>Data partitioning is a key issue in programming distributed memory systems.</p>
+                <img src="figs_introduccion/partition_8x8_figure.png" width=500>
+                <p>Example of partitioning an $8 \times 8$ array onto $4$ processes: each has a $4 \times 4$ submatrix.</p>
+                <p>Stencil code: 5-point stencil requires each process to store an additional row and column to be received from another process. It must also send a row and column to another process.</p>
+                </section>
+
+                <section><h3>Parallelism basics: shared memory systems</h3>
+                <p>All CPUs have access to a common memory space. Example: modern workstations/laptops with multicore processors.</p>
+                <p>Each core typically has a local memory (Level 1 cache) to reduce expensive main memory access (von Neumann bottleneck).</p>
+                <p>To ensure exactness values in main memory must match values in local caches: <i>cache coherence</i>.</p>
+                </section>
+
+                <section><h3>Parallelism basics: shared memory systems</h3>
+                <p>Parallelism on shared memory architectures typically uses multithreading.</p>
+                <p>As threads share memory space simultaneously, care must be taken to avoid <i>race conditions</i>: when two threads access a shared variable simultaneously (without any locking or synchronisation).</p>
+                <p>We will study multithread programming using OpenMP: this uses <i>pragmas</i> to automatise as much as possible the parallelisation.</p>
+                <p>Pragmas are preprocessor directives that a compiler uses to generate multithread code.</p>
+                <p>Accelerator architectures (coprocessors and GPUs) use thousands or millions of threads. We will study this massive multithreading with GPUs using the CUDA extension of C.</p>
+                </section>
+
+                <section><h3>Parallel algorithm design considerations</h3>
+                <p><ul><li>Partitioning: the problem must be decomposed into pieces. Options include <i>data parallelism</i>, <i>task parallelism</i> and <i>model parallelism</i>.</li>
+                       <li>Communication: the partitioning chosen determines the type and frequency of communication required between processes or threads.</li>
+                       <li>Synchronisation: this may be required at certain points of the algorithm.</li>
+                       <li>Load balancing: the work should be evenly divided between processes/threads to ensure maximum use of resources.</li></ul></p>
+                </section>
+
+                <section><h4>Design considerations: how to parallelise</h4>
+                <p>Fully independent calculations may be easily parallelised (<i>embarrassingly parallel problems</i>). Others are more difficult.</p>
+                <p>Consider the <i>prefix sum</i>:</p>
+                <pre><code>for (i=1; i&ltn; i++) A[i] = A[i] + A[i-1]</code></pre>
+                <p>One approach: divide array across processors, each processor then calculates its local prefix sum. The results are then stored in another array and a second prefix sum is calculated. This takes $\log_2(p)$ steps in parallel.</p>
+                </section>
+
+                <section><h4>Design considerations: how to parallelise</h4>
+                <img src="figs_introduccion/prefix_sum_figure.png">
+                </section>
+
+                <section><h4>Design considerations: data partitioning</h4>
+                <p>Consider the stencil code example from before. The partitioning determines the communication strategy.</p>
+                <p>Embarrassingly parallel problems involve independent operations (no communication) and are easy to parallelise.</p>
+                </section>
+
+                <section><h4>Design considerations: synchronisation</h4>
+                <p>Consider the stencil code example from before. It may be necessary to synchronise to ensure that all values in the communicated rows/columns are calculated before sending/receiving.</p>
+                </section>
+
+                <section><h4>Design considerations: task parallelism</h4>
+                <p>Assigns different tasks to different processes/threads.</p>
+                <p>Example of image classification: different binary classifier run on each processor, with results merged at the end.</p>
+                <img src="figs_introduccion/ternary_classifier_figure.png">
+                </section>
+
+                <section><h4>Design considerations: load balancing</h4>
+                <p>Assume that the human/not human classification takes longer than the other two.</p>
+                <p>In a task parallel design P2 will take longer than P0 or P1. Thus the merge will need to wait for P2 while P0 and P1 are idle: <i>load imbalance</i></p>
+                <p>Dynamic scheduling policies can be applied to help. E.g. images could be organised in batches in a data-parallel approach, so that the classifier is sent a new batch as soon as it has completed one.</p>
+                </section>
+
+                <section><h4>Design considerations: model parallelism</h4>
+                <img src="figs_introduccion/ann_gpu_figure.png" width=400>
+                <p>Large complex neural nets often exceed the memory available to a GPU.</p>
+                <p>Model parallelism can be implemented where the weights of the network are split across GPUs, and each GPU works on part of the model.</p>
+                <p> This requires the output vector of each layer of the full net to be gathered in each GPU before the next can be calculated (i.e. communication and synchronisation are both required).</p>
+                </section>
+
+                <section><h3>Modern HPC architectures</h3>
+                <p>Modern supercomputers often combine distributed memory and shared memory architectures (with a mix of CPUs and GPUs).</p>
+                <p>Thus it is often necessary to combine various techniques:</p>
+                <p><ul><li>Node-level parallelisation: distributed memory, MPI</li>
+                       <li>Intra-node parallelisation: shared memory, OpenMP</li>
+                       <li>Accelerator-level parallelisation: GPUs, CUDA</li></ul></p>
+                </section>
+
+
+			</div>
+		</div>
+
+		<script src="/home/graeme/Documents/talks/reveal.js/js/reveal.js"></script>
+
+		<script>
+			// More info about config & dependencies:
+			// - https://github.com/hakimel/reveal.js#configuration
+			// - https://github.com/hakimel/reveal.js#dependencies
+			Reveal.initialize({
+				hash: true,
+                transition: 'none',
+
+                math: {
+		                //mathjax: 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js',
+                        mathjax: '/home/graeme/Documents/talks/reveal.js/MathJax-2.7.3/MathJax.js',
+		                config: 'TeX-AMS_HTML-full', // See http://docs.mathjax.org/en/latest/config-files.html
+		                // pass other options into `MathJax.Hub.Config()`
+		                TeX: { Macros: { RR: "{\\bf R}" } }
+	                  },
+
+				dependencies: [
+					{ src: '/home/graeme/Documents/talks/reveal.js/plugin/markdown/marked.js' },
+					{ src: '/home/graeme/Documents/talks/reveal.js/plugin/markdown/markdown.js' },
+					{ src: '/home/graeme/Documents/talks/reveal.js/plugin/highlight/highlight.js' },
+					{ src: '/home/graeme/Documents/talks/reveal.js/plugin/notes/notes.js', async: true },
+                    { src: '/home/graeme/Documents/talks/reveal.js/plugin/math/math.js', async: true }
+				]
+			});
+		</script>
+	</body>
+</html>
