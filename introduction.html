@@ -1,83 +1,51 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<head>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-<meta charset="utf-8" />
-<meta http-equiv="X-UA-Compatible" content="chrome=1" />
+		<title>Programación Paralela - Capítulo I - Introducción y Fundamentos</title>
 
-<meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+		<link rel="stylesheet" href="/home/graeme/Documents/talks/reveal.js/css/reset.css">
+		<link rel="stylesheet" href="/home/graeme/Documents/talks/reveal.js/css/reveal.css">
+		<link rel="stylesheet" href="/home/graeme/Documents/talks/reveal.js/css/theme/white.css">
 
-<title>Programación Paralela: Introducción</title>
+		<!-- Theme used for syntax highlighting of code -->
+		<link rel="stylesheet" href="/home/graeme/Documents/talks/reveal.js/lib/css/monokai.css">
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+		<!-- Printing and PDF exports -->
+		<script>
+			var link = document.createElement( 'link' );
+			link.rel = 'stylesheet';
+			link.type = 'text/css';
+			link.href = window.location.search.match( /print-pdf/gi ) ? '/home/graeme/Documents/talks/reveal.js/css/print/pdf.css' : '/home/graeme/Documents/talks/reveal.js/css/print/paper.css';
+			document.getElementsByTagName( 'head' )[0].appendChild( link );
+		</script>
 
-<!-- General and theme style sheets -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/css/reset.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/css/reveal.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/css/theme/white.css">
+        <style>
+            .container{
+                        display: flex;
+                      }
+            .col{
+                      flex: 1;
+                }
+            .reveal section p {
+                      display: inline-block;
+                      font-size: 0.6em;
+                      line-height: 1.2em;
+                      vertical-align: top;
+                      text-align: left;
+            }
+            .reveal section li {
+                      font-size: 0.6em;
+            }
+            .reveal section img {
+                      border: none;
+            }
+        </style>
 
-<!-- Theme used for syntax highlighting of code -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/css/monokai.css">
-
-<!-- If the query includes 'print-pdf', include the PDF print sheet -->
-<script>
-if( window.location.search.match( /print-pdf/gi ) ) {
-        var link = document.createElement( 'link' );
-        link.rel = 'stylesheet';
-        link.type = 'text/css';
-        link.href = 'https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/css/print/pdf.css';
-        document.getElementsByTagName( 'head' )[0].appendChild( link );
-}
-
-</script>
-
-<!-- Loading the mathjax macro -->
-<!-- Load mathjax -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS_HTML"></script>
-<!-- MathJax configuration -->
-<script type="text/x-mathjax-config">
-MathJax.Hub.Config({
-    tex2jax: {
-        inlineMath: [ ['$','$'], ["\\(","\\)"] ],
-        displayMath: [ ['$$','$$'], ["\\[","\\]"] ],
-        processEscapes: true,
-        processEnvironments: true
-    },
-    // Center justify equations in code and markdown cells. Elsewhere
-    // we use CSS to left justify single line equations in code cells.
-    displayAlign: 'center',
-    "HTML-CSS": {
-        styles: {'.MathJax_Display': {"margin": 0}},
-        linebreaks: { automatic: true }
-    }
-});
-</script>
-<!-- End of mathjax configuration -->
-
-<style>
-    .container{
-                display: flex;
-              }
-    .col{
-              flex: 1;
-        }
-    .reveal section p {
-              display: inline-block;
-              font-size: 0.6em;
-              line-height: 1.2em;
-              vertical-align: top;
-    }
-    .reveal section li {
-              font-size: 0.6em;
-    }
-    .reveal section img {
-              border: none;
-    }
-</style>
-</head>
-<body>
+	</head>
+	<body>
 		<div class="reveal">
 			<div class="slides">
 
@@ -87,19 +55,17 @@ MathJax.Hub.Config({
                 <section><h2>Información sobre el curso</h2>
                 <p><ul><li>Libro: "Parallel Programming", Schmidt, Gonzalez-Dominguez, Hundt, Schlarb. (Disponible en el Google Classroom)</li>
                        <li>El libro usa el lenguaje C++, nosotros usaremos C (no es muy difícil traduccir los ejemplos de C++ a C)</li>
-                       <li>El horario oficial de la clase es martes 8.30-10.00, 10.15-11.45.</li>
-                       <li>Propongo tener una reunión el martes a las 9.30 (1 hora aprox.)</li>
-                       <li>La idea es que ustedes estudian el libro y trabajan en las tareas!</li>
+                       <li>El horario de la clase es martes 10.15-11.15, miercoles 10.15-11.15.</li>
                        <li>Las evaluaciones serán en forma de tareas.</li></ul>
                 </section>
 
                 <section><h2>Programa</h2>
                 <p><ul><li>Introduction</li>
                        <li>Theoretical Background</li>
-                       <li>Modern Acrhitectures</li>
+                       <li>Modern Architectures (SIMD)</li>
                        <li>OpenMP</li>
-                       <li>CUDA</li>
-                       <li>MPI</li></ul>
+                       <li>MPI</li>
+                       <li>Proyecto Final: simulaciones</li></ul>
                 </section>
 
                 <section><h1>Introduction</h1>
@@ -165,7 +131,7 @@ MathJax.Hub.Config({
                 </section>
 
                 <section><h4>Simple example: summation of an array</h4>
-                <img src="figs_introduccion/strong_scalability_figure.png" width="800">
+                <img src="strong_scalability_figure.png" width="800">
                 <p>Algorithm is not strongly scalable</p>
                 </section>
 
@@ -174,7 +140,7 @@ MathJax.Hub.Config({
                 </section>
 
                 <section><h4>Simple example: summation of an array</h4>
-                <img src="figs_introduccion/weak_scalability_figure.png">
+                <img src="weak_scalability_figure.png">
                 <p>Algorithm is <b>weakly</b> scalable</p>
                 </section>
 
@@ -225,7 +191,7 @@ MathJax.Hub.Config({
 
                 <section><h4>Distributed memory systems, data partitioning</h4>
                 <p>Data partitioning is a key issue in programming distributed memory systems.</p>
-                <img src="figs_introduccion/partition_8x8_figure.png" width=500>
+                <img src="partition_8x8_figure.png" width=500>
                 <p>Example of partitioning an $8 \times 8$ array onto $4$ processes: each has a $4 \times 4$ submatrix.</p>
                 <p>Stencil code: 5-point stencil requires each process to store an additional row and column to be received from another process. It must also send a row and column to another process.</p>
                 </section>
@@ -241,7 +207,7 @@ MathJax.Hub.Config({
                 <p>As threads share memory space simultaneously, care must be taken to avoid <i>race conditions</i>: when two threads access a shared variable simultaneously (without any locking or synchronisation).</p>
                 <p>We will study multithread programming using OpenMP: this uses <i>pragmas</i> to automatise as much as possible the parallelisation.</p>
                 <p>Pragmas are preprocessor directives that a compiler uses to generate multithread code.</p>
-                <p>Accelerator architectures (coprocessors and GPUs) use thousands or millions of threads. We will study this massive multithreading with GPUs using the CUDA extension of C.</p>
+                <p>Accelerator architectures (coprocessors and GPUs): thousands or millions of threads (GPU course next semester)</p>
                 </section>
 
                 <section><h3>Parallel algorithm design considerations</h3>
@@ -259,7 +225,7 @@ MathJax.Hub.Config({
                 </section>
 
                 <section><h4>Design considerations: how to parallelise</h4>
-                <img src="figs_introduccion/prefix_sum_figure.png">
+                <img src="prefix_sum_figure.png">
                 </section>
 
                 <section><h4>Design considerations: data partitioning</h4>
@@ -274,7 +240,7 @@ MathJax.Hub.Config({
                 <section><h4>Design considerations: task parallelism</h4>
                 <p>Assigns different tasks to different processes/threads.</p>
                 <p>Example of image classification: different binary classifier run on each processor, with results merged at the end.</p>
-                <img src="figs_introduccion/ternary_classifier_figure.png">
+                <img src="ternary_classifier_figure.png">
                 </section>
 
                 <section><h4>Design considerations: load balancing</h4>
@@ -284,7 +250,7 @@ MathJax.Hub.Config({
                 </section>
 
                 <section><h4>Design considerations: model parallelism</h4>
-                <img src="figs_introduccion/ann_gpu_figure.png" width=400>
+                <img src="ann_gpu_figure.png" width=400>
                 <p>Large complex neural nets often exceed the memory available to a GPU.</p>
                 <p>Model parallelism can be implemented where the weights of the network are split across GPUs, and each GPU works on part of the model.</p>
                 <p> This requires the output vector of each layer of the full net to be gathered in each GPU before the next can be calculated (i.e. communication and synchronisation are both required).</p>
@@ -301,68 +267,33 @@ MathJax.Hub.Config({
 
 			</div>
 		</div>
-        
-<script>
 
-require(
-    {
-      // it makes sense to wait a little bit when you are loading
-      // reveal from a cdn in a slow connection environment
-      waitSeconds: 15
-    },
-    [
-      "https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/lib/js/head.min.js",
-      "https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/js/reveal.js"
-    ],
+		<script src="/home/graeme/Documents/talks/reveal.js/js/reveal.js"></script>
 
-    function(head, Reveal){
+		<script>
+			// More info about config & dependencies:
+			// - https://github.com/hakimel/reveal.js#configuration
+			// - https://github.com/hakimel/reveal.js#dependencies
+			Reveal.initialize({
+				hash: true,
+                transition: 'none',
 
-        // Full list of configuration options available here: https://github.com/hakimel/reveal.js#configuration
-        Reveal.initialize({
-            controls: true,
-            progress: true,
-            history: true,
+                math: {
+		                //mathjax: 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js',
+                        mathjax: '/home/graeme/Documents/talks/reveal.js/MathJax-2.7.3/MathJax.js',
+		                config: 'TeX-AMS_HTML-full', // See http://docs.mathjax.org/en/latest/config-files.html
+		                // pass other options into `MathJax.Hub.Config()`
+		                TeX: { Macros: { RR: "{\\bf R}" } }
+	                  },
 
-            transition: "slide",
-
-            // Optional libraries used to extend on reveal.js
-            dependencies: [
-                { src: "https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/lib/js/classList.js",
-                  condition: function() { return !document.body.classList; } },
-                { src: "https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/plugin/notes/notes.js",
-                  async: true,
-                  condition: function() { return !!document.body.classList; } }
-            ]
-        });
-
-        var update = function(event){
-          if(MathJax.Hub.getAllJax(Reveal.getCurrentSlide())){
-            MathJax.Hub.Rerender(Reveal.getCurrentSlide());
-          }
-        };
-
-        Reveal.addEventListener('slidechanged', update);
-
-        function setScrollingSlide() {
-            var scroll = false
-            if (scroll === true) {
-              var h = $('.reveal').height() * 0.95;
-              $('section.present').find('section')
-                .filter(function() {
-                  return $(this).height() > h;
-                })
-                .css('height', 'calc(95vh)')
-                .css('overflow-y', 'scroll')
-                .css('margin-top', '20px');
-            }
-        }
-
-        // check and set the scrolling slide every time the slide change
-        Reveal.addEventListener('slidechanged', setScrollingSlide);
-
-    }
-
-);
-</script>
-</body>
+				dependencies: [
+					{ src: '/home/graeme/Documents/talks/reveal.js/plugin/markdown/marked.js' },
+					{ src: '/home/graeme/Documents/talks/reveal.js/plugin/markdown/markdown.js' },
+					{ src: '/home/graeme/Documents/talks/reveal.js/plugin/highlight/highlight.js' },
+					{ src: '/home/graeme/Documents/talks/reveal.js/plugin/notes/notes.js', async: true },
+                    { src: '/home/graeme/Documents/talks/reveal.js/plugin/math/math.js', async: true }
+				]
+			});
+		</script>
+	</body>
 </html>
