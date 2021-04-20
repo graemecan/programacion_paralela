@@ -1,0 +1,476 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="X-UA-Compatible" content="chrome=1" />
+
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+
+<title>clase1 slides</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+<!-- General and theme style sheets -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/css/reveal.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/css/theme/white.css" id="theme">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/lib/css/zenburn.css">
+
+<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+<script>
+if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = 'https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/css/print/pdf.css';
+        document.getElementsByTagName( 'head' )[0].appendChild( link );
+}
+
+</script>
+
+<!--[if lt IE 9]>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/lib/js/html5shiv.js"></script>
+<![endif]-->
+
+<!-- Loading the mathjax macro -->
+<!-- Load mathjax -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS_HTML"></script>
+    <!-- MathJax configuration -->
+    <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+            displayMath: [ ['$$','$$'], ["\\[","\\]"] ],
+            processEscapes: true,
+            processEnvironments: true
+        },
+        // Center justify equations in code and markdown cells. Elsewhere
+        // we use CSS to left justify single line equations in code cells.
+        displayAlign: 'center',
+        "HTML-CSS": {
+            styles: {'.MathJax_Display': {"margin": 0}},
+            linebreaks: { automatic: false }
+        }
+    });
+    </script>
+    <!-- End of mathjax configuration -->
+
+<!-- Get Font-awesome from cdn -->
+<!--<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.css">-->
+
+
+        <style type="text/css">
+            .container{
+                        display: flex;
+                      }
+            .col{
+                      flex: 1;
+                }
+            .reveal section p {
+                      display: inline-block;
+                      font-size: 0.6em;
+                      line-height: 1.2em;
+                      vertical-align: top;
+                      text-align: left;
+            }
+            .reveal section li {
+                      font-size: 0.6em;
+            }
+            .reveal section img {
+                      border: none;
+            }
+        </style>
+
+	</head>
+	<body>
+			<div class="reveal">
+			<div class="slides">
+
+                <section><h1>Theoretical Background</h1>
+                </section>
+
+				<section><h3>PRAM</h3>
+                <p>To begin our study of parallel algorithms we consider a theoretical computer model: the PRAM.</p>
+                <p>PRAM: Parallel Random Access Machine</p>
+                <p>The model facilitates the design of parallel algorithms without worrying about all the messy details of real computer architectures.</p>
+                </section>
+
+                <section><h3>PRAM</h3>
+                <img src="theoretical_background_figs/pram_figure.png">
+                </section>
+
+                <section><h4>PRAM: general features</h4>
+                <p>$n$ identical processors $P_i$, $i = 0,\ldots,n-1$ operating in lock-step.</p>
+                <p>At every step, each processor executes an instruction cycle in $3$ phases:</p>
+                <p><ul><li><b>Read phase</b>: each processor can read a single data item from a shared memory cell and store it in a local register.</li>
+                       <li><b>Compute phase</b>: each processor can perform a fundamental operation on its local data and store the result in a register.</li>
+                       <li><b>Write phase</b>: each processor can write a data item to a shared memory cell.</li></ul></p>
+                </section>
+
+                <section><h4>PRAM: how it works</h4>
+                <p>Three-phase PRAM instructions are executed synchronously.</p>
+                <p>Communication in the PRAM is implemented by the shared memory access.</p>
+                <p>We assume uniform memory access times, which is <b>not</b> true for real computers.</p>
+                </section>
+
+                <section><h4>PRAM variants</h4>
+                <p>There are multiple variants depending on how memory access is handled. The $3$ most popular variants are:</p>
+                <p><ul><li><b>Exclusive Read Exclusive Write (EREW)</b>: no two processors are allowed to read/write to same shared memory cell during any cycle.</li></p>
+                       <li><b>Concurrent Read Exclusive Write (CREW)</b>: simultaneous read allowed, but not simultaneous writes.</li></p>
+                       <li><b>Concurrent Read Concurrent Write (CRCW)</b>: both simultaneous reads and writes allowed.</li></ul></p>
+                </section>
+
+                <section><h4>PRAM variants</h4>
+                <img src="theoretical_background_figs/crew_figure.png">
+                </section>
+
+                <section><h4>PRAM variant CRCW: dealing with simultaneous writes</h4>
+                <p>Four common approaches to deal with simultaneous writes to the same memory cell:</p>
+                <p><ul><li><i>Priority CW</i>: Processors are assigned priorities and highest wins.</li>
+                       <li><i>Arbitrary CW</i>: Randomly chosen processor wins.</li>
+                       <li><i>Common CW</i>: only written to if all values are equal (common).</li>
+                       <li><i>Combining CW</i>: all values are combined using associative binary operation, e.g. sum, product, minimum, logical AND.</li></ul></p>
+                </section>
+
+                <section><h4>Parallel prefix sum on a PRAM</h4>
+                <p>Consider an exclusive write variant PRAM for calculating a prefix sum of an array of $n$ numbers.</p>
+                <pre><code>for (i=1; i&ltn; i++) A[i] = A[i] + A[i-1];</code></pre>
+                <p>Goal: find a <i>cost-optimal</i> PRAM algorithm where $C(n) = T(n,p) \times p$ is linear in $n$.</p>
+                </section>
+
+                <section><h4>Parallel prefix sum: first approach</h4>
+                <p>Use $p = n$ processors in a recursive doubling technique.</p>
+                <img src="theoretical_background_figs/parallel_prefix_pram_figure.png">
+                </section>
+
+                <section><h4>Parallel prefix sum: first approach</h4>
+                <p>Use $p = n$ processors in a recursive doubling technique.</p>
+                <pre><code>// each processor copies an array entry to a local register
+for (j=0; j&ltn; j++) do_in_parallel
+    reg_j = A[j];
+
+// sequential outer loop
+for (i=0; i&ltceil(log(n)); i++) do
+    // parallel inner loop performed by proc j
+    for (j = pow(2,i); j&ltn; j++) do_in_parallel {
+        reg_j += A[j-pow(2,i)]; // perform computation
+        A[j] = reg_j; // write result in shared memory
+    }</code></pre>
+                <p>$\log_2(n)$ iterations required, cost of $C(n) = T(n,p) \times p = \mathcal{O}(\log(n)) \times n = \mathcal{O}(n \times \log(n))$.</p>
+                </section>
+
+                <section><h4>Parallel prefix sum: first approach</h4>
+                <p>This first algorithm is not cost-optimal (log-linear, not linear).</p>
+                <p>Need to lower runtime or number of processors.</p>
+                <p>Reduce from $p=n$ to $p = n/\log_2(n)$.</p>
+                </section>
+
+                <section><h4>Parallel prefix sum: PRAM algorithm</h4>
+                <p><ol><li>Partition $n$ input values into chunks of size $\log_2(n)$. Each processor parallel computes local prefix sum, $\mathcal{O}(\log(n))$.</li>
+                       <li>Perform non-cost-optimal sum on $n/\log(n)$ partial results, $\mathcal{O}(\log(n/\log(n)))$.</li>
+                       <li>Each processor adds value from its left neighbour computed in stage 2 to its chunk, $\mathcal{O}(\log(n))$</li>
+                       <li>This approach was used before... </li></ol></p>
+                </section>
+
+                <section><h4>Parallel prefix sum: PRAM algorithm</h4>
+                <img src="theoretical_background_figs/prefix_sum_figure.png">
+                <p>(Typo in final array: last set of 5 numbers should be 60 62 65 70 71)</p>
+                </section>
+
+                <section><h4>Parallel prefix sum: code listing</h4>
+                <p>We assume $n = 2^k$, so $p = n/k$.</p>
+                <pre><code>//Stage 1: each processor i computes a local
+//prefix sum of a subarray of size n/p = log(n) = k
+for (i=0; i&ltn/k; i++) do_in_parallel
+    for (j=1; j&ltk; j++)
+        A[i*k+j] += A[i*k+j-1];
+
+//Stage 2: prefix sum calculation using only rightmost value
+//of each subarray which takes O(log(n/k)) steps
+for (i=0; i&ltlog(n/k); i++) do
+    for (j = pow(2,i); j&lt=n/k; j++) do_in_parallel
+        A[j*k-1] += A[(j-pow(2,i))*k-1];
+
+//Stage 3: each processor i adds value computed in stage 2 by
+//processor i-1 to each subarray element except last
+for (i=1; i&ltn/k; i++) do_in_parallel
+    for (j=0; j&ltk-1; j++)
+        A[i*k+j] += A[i*k-1];</code></pre>
+                <p>Cost of $C(n) = T(n,p) \times p = \mathcal{O}(\log(n)) \times \mathcal{O}(\frac{n}{\log(n)}) = \mathcal{O}(n)$.</p>
+                </section>
+
+                <section><h4>Sparse array compaction</h4>
+                <p>We have a one-dimensional array $A$ where most entries are zero.</p>
+                <p>More efficient to store non-zero values (in array $V$) and their coordinates (in array $C$): compaction.</p>
+                <p>Sequential algorithm iterates over $n$ elements of $A$ incrementally building $V$ and $C$ in time linear in $n$.</p>
+                </section>
+
+                <section><h4>Sparse array compaction</h4>
+                <img src="theoretical_background_figs/sparse_array_figure_2_4.png">
+                </section>
+
+                <section><h4>Sparse array compaction: PRAM algorithm</h4>
+                <p>Cost-optimal parallel algorithm with $p=n/\log_2(n)$:</p>
+                <p><ol><li>Generate temporary array $tmp$ with $tmp[i] = 1$ if $A[i] \neq 0$ and $tmp[i] = 0$ otherwise.</li>
+                       <li>Perform parallel prefix sum on $tmp$: for each non-zero element of $A$ the respective value in $tmp$ is the destination address for that element in $V$.</li>
+                       <li>Write non-zero elements of $A$ to $V$ using these addresses, coordinates $C$ can be written in a similar way.</li></ol></p>
+                </section>
+
+                <section><h4>Sparse array compaction: PRAM algorithm</h4>
+                <img src="theoretical_background_figs/sparse_array_parallel_2_5.png">
+                </section>
+
+                <section><h3>Network Topologies</h3>
+                <p>Two main types: <i>shared</i> and <i>switched</i>.</p>
+                <p>Shared network, such as a bus (e.g. ethernet) communicates one message at a time.</p>
+                <p>Switched networks simultaneously transfer several messages between different pairs of nodes.</p>
+                <p>In HPC distributed memory architectures a switched network is usually used.</p>
+                <p>The specific <i>network topology</i> is key in determining the scalability and performance of an HPC architecture.</p>
+                </section>
+
+                <section><h4>Network Topologies: switched network</h4>
+                <p>We represent the network as a connected graph whose vertices are nodes (switches or processors) and the edges are communication links.</p>
+                <p>Direct networks: all nodes have a processor attached.</p>
+                <p>Indirect networks: some nodes are switches (intermediate routing nodes).</p>
+                <p>Analyse networks using following network-theoretic concepts:</p>
+                <p><ul><li><b>Degree</b>: maximum number of neighbours of any node.</li>
+                       <li><b>Diameter</b>: length of longest of all shortest paths between any two nodes.</li>
+                       <li><b>Bisection-width</b>: minimum number of edges to be removed to disconnect network into two equal halves.</li></ul></p>
+                </section>
+
+                <section><h4>Network Topologies: contradictory requirements</h4>
+                <p>Desirable properties:</p>
+                <p><ul><li><b>Constant degree</b>: independent of network size, allows scalability.</li>
+                       <li><b>Low diameter</b>: to support efficient communication between any pair of processors.</li>
+                       <li><b>High bisection-width</b>: to eliminate network bottlenecks, maintain high internal bandwidth. May require non-constant network degree.</li></ul></p>
+                </section>
+
+                <section><h4>Network Topologies: linear array</h4>
+                <p>$n$ nodes, $P_0,\ldots,P_{n-1}$ denoted as $L_n$. Node $n$ is connected to its left and right neighbours only.</p>
+                <p>deg$(L_n) = 2$, longest distance between any two nodes is from $P_0$ to $P_{n-1}$ where data has to traverse $n-1$ links, so diam$(L_n) = n-1$, and bw$(L_n) = 1$.</p>
+                <img src="theoretical_background_figs/linear_array_2_6.png" width=500>
+                </section>
+
+                <section><h4>Network Topologies: 2D mesh</h4>
+                <div class="container">
+                <div class="col">
+                <p>$n$ nodes in a $k \times k$ grid denoted as $M_{k,k}$. We will assume $k$ is even for simplicity.</p>
+                <p>deg$(M_{k,k}) = 4$, and is independent of mesh size.</p>
+                <p>Longest distance between any two nodes is diagonally across grid, where data has to traverse $2(k-1)$ links, so diam$(M_{k,k}) = 2(k-1) = 2(\sqrt{n}-1)$.</p>
+                <p>To split the grid into two equal halves we must cut at least $k$ links, so the bisection-width is bw$(M_{k,k}) = k = \sqrt{n}$.</p>
+                </div>
+                <div class="col">
+                <img src="theoretical_background_figs/mesh_2d_2_7.png" width=500>
+                </div>
+                </div>
+                </section>
+
+                <section><h4>Network Topologies: 2D and 3D tori</h4>
+                <p>A common extension of the 3D mesh is the <b>2D torus</b>, where the top and bottom of the columns of cores are connected, as are the left and right-most cores (wrap around edges).</p>
+                <p>Reduces diameter and bisection-width by a factor of $2$ compared to the 2D mesh, but keeps degree constant at $4$.</p>
+                <p>A <b>3D mesh</b> extends the 2D mesh by adding another dimension: degree $6$, diameter $3(k-1) = 3(\sqrt[3]{n} - 1)$, bisection-width $k^2 = n^{2/3}$.</p>
+                <p><b>3D torus</b> is a 3D mesh with wrap around edges. This topology has been used in major HPC facilities.</p>
+                </section>
+
+                <section><h4>Network Topologies: binary tree</h4>
+                <div class="container">
+                <div class="col">
+                <p>$n = 2^d - 1$ nodes are arranged in a tree of depth $d$.</p>
+                <p>Each node connects to one parent and two children, so the degree is $3$.</p>
+                <p>Longest distance is from leaf node on left to leaf node on right. Requires going up to the root $(d-1)$ links, then down to the leaf $(d-1)$ links, i.e. diameter of $2(d-1) = 2 \log_2 (n+1)$.</p>
+                <p>Degree is constant and diameter is low, but bisection-width is $1$, extremely low!</p>
+                </div>
+                <div class="col">
+                <img src="theoretical_background_figs/binary_tree_2_8.png" width=700>
+                </div>
+                </div>
+                </section>
+
+                <section><h3>Amdahl's and Gustafson's Laws</h3>
+                <p>Theoretical method to obtain upper bound on possible speedup when parallelising a sequential program.</p>
+                <p>Split program into two parts:</p>
+                <p><ul><li>$T_{ser}$: part that is sequential, i.e. does not benefit from parallelisation or has not been parallelised.</li>
+                       <li>$T_{par}$: part that may benefit from parallelisation.</li></ul></p>
+                </section>
+
+                <section><h4>Amdahl's and Gustafson's Laws</h4>
+                <p>Runtime of the program on a single processor is $T(1) = T_{ser} + T_{par}$.</p>
+                <p>Assume best possible speedup is linear, so parallel part runs $p$ times faster on $p$ processors (serial part remains unchanged): $T(p) \geq T_{ser} + \frac{T_{par}}{p}$</p>
+                <p>$$S(p) = \frac{T(1)}{T(p)} \leq \frac{T_{ser} + T_{par}}{T_{ser} + \frac{T_{par}}{p}}$$</p>
+                </section>
+
+                <section><h4>Amdahl's and Gustafson's Laws</h4>
+                <p>Use fractional runtime: $T_{ser} = f \cdot T(1)$ and $T_{par} = (1-f)\cdot T(1)$.</p>
+                <p>$S(p) = \frac{T(1)}{T(p)} \leq \frac{T_{ser} + T_{par}}{T_{ser} + \frac{T_{par}}{p}} = \frac{f\cdot T(1) + (1-f)\cdot T(1)}{f\cdot T(1) + \frac{(1-f)\cdot T(1)}{p}} = \frac{1}{f+\frac{1-f}{p}}$.</p>
+                <p>This is <b>Amdahl's Law</b>.
+                </section>
+
+                <section><h4>Examples of Amdahl's Law</h4>
+                <p><b>Example 1</b>: 95% of execution time within a loop we want to parallelise. Maximum speedup possible on $6$ processors is: $S(6) \leq 1/(0.05 + 0.95/6) = 4.8$.</p>
+                <p><b>Example 2</b>: 10% of execution time spent in serial code, limit of speedup possible: $S(\infty) \leq \lim_{p \to \infty} \frac{1}{0.1 + 0.9/p} = 10$.</p>
+                <p>Important limitation of Amdahl's Law: problem size is constant (strong scalability)</p>
+                </section>
+
+                <section><h4>More general law including scaling of problem size</h4>
+                <p><ul><li>$\alpha$: scaling applied to non-parallel part due to varying problem size.</li>
+                       <li>$\beta$: scaling applied to parallel part due to varying problem size.</li></ul></p>
+                <p>$T_{\alpha \beta}(1) = \alpha \cdot T_{ser} + \beta \cdot T_{par} = \alpha \cdot f \cdot T(1) + \beta \cdot (1-f) \cdot T(1)$</p>
+                <p>$S_{\alpha \beta}(p) = \frac{T_{\alpha \beta}(1)}{T_{\alpha \beta}(p)} \leq \frac{\alpha \cdot f + \beta \cdot (1-f)}{\alpha \cdot f + \frac{\beta \cdot (1-f)}{p}}$</p>
+                </section>
+
+                <section><h4>More general law including scaling of problem size</h4>
+                <p>We now define $\gamma = \beta/\alpha$ and reformulate the speedup: $$S_{\gamma}(p) \leq \frac{f + \gamma \cdot (1-f)}{f + \frac{\gamma \cdot (1-f)}{p}}$$</p>
+                <p><ul><li>$\gamma = 1$: constant ratio of problem size scaling between parallel and non-parallel parts. This gives Amdahl's Law.</li>
+                       <li>$\gamma = p$: parallelisable part grows linearly in $p$ while serial part is constant. Gustafson's Law: $S(p) \leq f + p\cdot (1-f) = p + f \cdot (1-p)$.</li></ul></p>
+                </section>
+
+                <section><h4>Examples of the general law</h4>
+                <p><b>Example 1</b>: problem that is 15% serial and 85% linearly parallelisable for a given problem size. Assuming serial time does not grow with problem size:</p>
+                <p><ul><li>(i) With $50$ processors and no scaling of the problem size we get a speedup of $S_{\gamma = 1}(50) \leq 1/(0.15 + 0.85/50) = 5.99$.</li>
+                <li>(ii) Now we scale the problem by a factor of $100$: $S_{\gamma = 100}(50) \leq (0.15 + 100 \cdot 0.85)/(0.15 + (100 \cdot 0.85)/50) = 46.03$.</li></ul></p>
+                </section>
+
+                <section><h4>Examples of the general law</h4>
+                <p><b>Example 2</b>: we want a speedup of $100$ on $128$ processors.</p>
+                <p><ul><li>(i) What is the maximum sequential fraction when the speedup is acheived under strong scalability? Use Amdahl's Law: $100 = 1/(f + (1-f)/128)$ so $f = 0.28/127 = 0.0022$. Less than 1%!</li>
+                <li>(ii) What is the maximum sequential fraction when considering weak scalability with $\gamma$ scaling linearly? Use Gustafson's Law: $100 = 128 + f \cdot (1-128)$ so $f = 28/127 = 0.22$. Thus a higher fraction may be serial in weak scalability.</li></ul></p>
+                </section>
+
+                <section><h4>General law: speedup and efficiency</h4>
+                <p>Parameterise $\gamma(p,\delta) = p^{\delta}$. Thus $\delta = 0$ is Amdahl's Law, and $\delta = 1$ is Gustafson's Law.</p>
+                <p>$S_{\gamma}(p) = \frac{f + (1-f)p^{\delta}}{f+(1-f)p^{\delta - 1}} \quad \quad E_{\gamma}(p) = \frac{f+(1-f)p^{\delta}}{pf + (1-f)p^{\delta}}$</p>
+                <p>For $\delta \leq 0$ the scaled speedup is bounded by either $1$ or $1/f$:</p> 
+                <p>$\lim_{p \to \infty} S_{\gamma}(p) |_{\delta < 0} = 1 \quad \quad \lim_{p \to \infty} S_{\gamma}(p) |_{\delta = 0} = \frac{1}{f}$</p>
+                </section>
+
+                <section><h4>General law: speedup and efficiency</h4>
+                <p>For $\delta > 0$ the speedup is unbounded in the limit $p \to \infty$. Thus we can produce any speedup as long as the input scaling $\gamma$ has a monotonous dependency on $p$.</p>
+                <img src="theoretical_background_figs/speedup_2_12.png">
+                </section>
+
+                <section><h4>General law: speedup and efficiency</h4>
+                <div class="container">
+                <div class="col">
+                <p>The efficiency $E_{\gamma}(p)$ tends to $(1-f)$ in the limit for $\delta = 1$ and vanishes for $\delta = 0$.</p>
+                <p>We often want to find lines of constant efficiency in parameter space (<b>iso-efficiency lines</b>).</p>
+                <p>We sometimes refer to the <b>iso-efficiency function</b>: the scaling of the problem size required to maintain fixed efficiency.</p>
+                </div>
+                <div class="col">
+                <img src="theoretical_background_figs/isoefficiency_2_13.png">
+                </div>
+                </section>
+
+                <section><h3>Foster's parallel algorithm design methodology</h3>
+                <p><b>PCAM</b>: Partitioning, Communication, Agglomeration, Mapping</p>
+                <img src="theoretical_background_figs/foster_2_14.png" width=700>
+                </section>
+
+                <section><h4>PCAM: Partitioning</h4>
+                <p>Decomposition of total task into smaller tasks. We want to maximise the number to identify as much parallelism as possible (<i>fine-grained parallelism</i>).</p>
+                <p><ul><li>Domain decomposition: partition the data, then apply same computations to each data chunk (<i>data parallelism</i>)</li>
+                       <li>Functional decomposition: partition the computation, then apply each part to the data (<i>task parallelism</i>)</li></ul></p>
+                <p>Domain decomposition often has finer granularity than functional decomposition.</p>
+                </section>
+
+                <section><h4>PCAM: Communication</h4>
+                <p>We must determine the required communications between tasks identified in the Partitioning stage.</p>
+                <p><ul><li>Local or global</li>
+                       <li>Structured or unstructured</li>
+                       <li>Static or dynamic</li>
+                       <li>Synchronous or asynchronous</li></ul></p>
+                </section>
+
+                <section><h4>PCAM: Agglomeration</h4>
+                <p>Now we want to coarsen the granularity of our design by combining smaller tasks into larger tasks.</p>
+                <p>Directly implementing a very fine-grained parallel algorithm is likely to be very inefficient due to communication overheads.</p>
+                <p>Better to agglomerate several tasks in one processor: improves data locality and reduces communication times.</p>
+                </section>
+
+                <section><h4>PCAM: Mapping</h4>
+                <p>Finally we map our agglomerated tasks to the actual processors.</p>
+                <p>Goals of the mapping:</p>
+                <p><ul><li>To minimise communication by assigning tasks with frequent interactions within a processor.</li>
+                       <li>To enable concurrency by assigning parallelisable tasks to different processors.</li>
+                       <li>To balance the workload of the processors.</li></ul></p>
+                </section>
+
+                <section><h4>Example of PCAM: Jacobi iteration</h4>
+                <p>Fine-grained parallelism: domain decomposition of a stencil code on a 2D array: $\phi_{t+1}(i,j) = (\phi_t(i+1,j) + \phi_t(i-1,j) + \phi_t(i,j+1) + \phi_t(i,j-1))/4$</p>
+                <p>We then coarse-grain by agglomerating and mapping to the processors.</p>
+                <img src="theoretical_background_figs/agglomeration_2_15.png" width=600>
+                </section>
+
+                <section><h4>Example of PCAM: Jacobi iteration</h4>
+                <p>We now compare the communication time of both methods, considering $p$ processors.</p>
+                <p>Time required to send $n$ bytes: $T_{comm}(n) = s + r \cdot n$ where $s$ is the <i>latency</i> and $r$ is the inverse of the available bandwidth.</p>
+                <p>Communication time between $2$ processors for Method 1 is $2(s + r \cdot n)$ and for Method 2 is $4(s + r(\frac{n}{\sqrt{p}}))$.</p>
+                <p>Method 2 is superior for a large number of processors as it decreases with increasing $p$.</p>
+                </section>
+
+			</div>
+		</div>
+
+<script>
+
+require(
+    {
+      // it makes sense to wait a little bit when you are loading
+      // reveal from a cdn in a slow connection environment
+      waitSeconds: 15
+    },
+    [
+      "https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/lib/js/head.min.js",
+      "https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/js/reveal.js"
+    ],
+
+    function(head, Reveal){
+
+        // Full list of configuration options available here: https://github.com/hakimel/reveal.js#configuration
+        Reveal.initialize({
+            controls: true,
+            progress: true,
+            history: true,
+
+            transition: "slide",
+
+            // Optional libraries used to extend on reveal.js
+            dependencies: [
+                { src: "https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/plugin/highlight/highlight.js" }
+            ]
+        });
+
+        var update = function(event){
+          if(MathJax.Hub.getAllJax(Reveal.getCurrentSlide())){
+            MathJax.Hub.Rerender(Reveal.getCurrentSlide());
+          }
+        };
+
+        Reveal.addEventListener('slidechanged', update);
+
+        function setScrollingSlide() {
+            var scroll = false
+            if (scroll === true) {
+              var h = $('.reveal').height() * 0.95;
+              $('section.present').find('section')
+                .filter(function() {
+                  return $(this).height() > h;
+                })
+                .css('height', 'calc(95vh)')
+                .css('overflow-y', 'scroll')
+                .css('margin-top', '20px');
+            }
+        }
+
+        // check and set the scrolling slide every time the slide change
+        Reveal.addEventListener('slidechanged', setScrollingSlide);
+
+    }
+
+);
+</script>
+	</body>
+</html>
