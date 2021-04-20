@@ -1,28 +1,69 @@
-<!doctype html>
+
+<!DOCTYPE html>
 <html>
-	<head>
-		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<head>
 
-		<title>Programación Paralela - Capítulo I - Introducción y Fundamentos</title>
+<meta charset="utf-8" />
+<meta http-equiv="X-UA-Compatible" content="chrome=1" />
 
-		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/css/reset.css">
-		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/css/reveal.css">
-		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/css/theme/white.css">
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
-		<!-- Theme used for syntax highlighting of code -->
-		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/css/monokai.css">
 
-		<!-- Printing and PDF exports -->
-		<script>
-			var link = document.createElement( 'link' );
-			link.rel = 'stylesheet';
-			link.type = 'text/css';
-			link.href = window.location.search.match( /print-pdf/gi ) ? 'https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/css/print/pdf.css' : 'https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/css/print/paper.css';
-			document.getElementsByTagName( 'head' )[0].appendChild( link );
-		</script>
+<title>clase1 slides</title>
 
-        <style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+<!-- General and theme style sheets -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/css/reveal.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/css/theme/white.css" id="theme">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/lib/css/zenburn.css">
+
+<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+<script>
+if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = 'https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/css/print/pdf.css';
+        document.getElementsByTagName( 'head' )[0].appendChild( link );
+}
+
+</script>
+
+<!--[if lt IE 9]>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/lib/js/html5shiv.js"></script>
+<![endif]-->
+
+<!-- Loading the mathjax macro -->
+<!-- Load mathjax -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS_HTML"></script>
+    <!-- MathJax configuration -->
+    <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+            displayMath: [ ['$$','$$'], ["\\[","\\]"] ],
+            processEscapes: true,
+            processEnvironments: true
+        },
+        // Center justify equations in code and markdown cells. Elsewhere
+        // we use CSS to left justify single line equations in code cells.
+        displayAlign: 'center',
+        "HTML-CSS": {
+            styles: {'.MathJax_Display': {"margin": 0}},
+            linebreaks: { automatic: false }
+        }
+    });
+    </script>
+    <!-- End of mathjax configuration -->
+
+<!-- Get Font-awesome from cdn -->
+<!--<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.css">-->
+
+
+        <style type="text/css">
             .container{
                         display: flex;
                       }
@@ -53,7 +94,7 @@
                 </section>
 
                 <section><h2>Información sobre el curso</h2>
-                <p><ul><li>Libro: "Parallel Programming", Schmidt, Gonzalez-Dominguez, Hundt, Schlarb. (Disponible en el Google Classroom)</li>
+                <p><ul><li>Libro: "Parallel Programming", Schmidt, Gonzalez-Dominguez, Hundt, Schlarb</li>
                        <li>El libro usa el lenguaje C++, nosotros usaremos C (no es muy difícil traduccir los ejemplos de C++ a C)</li>
                        <!--<li>El horario de la clase es martes 10.15-11.15, miercoles 10.15-11.15.</li>
                        <li>Las evaluaciones serán en forma de tareas.</li></ul>-->
@@ -72,12 +113,12 @@
                 </section>
 
 				<section><h3>Some important initial concepts</h3>
-                <p><b>Speedup</b>: $S = T(1)/T(p)$ where $T(p)$ is the execution time on $p$ processors.</p>
-                <p><b>Efficiency</b>: $E = S/p = T(1)/(T(p) \times p)$</p>
-                <p><b>Cost</b>: $C = T(p) \times p$</p>
-                <p><b>Scalability, strong</b>: efficiency changes for fixed data size, varying $p$.</p>
-                <p><b>Scalability, weak</b>: efficiency changes for varying data size, varying $p$.</p>
-                <p><b>Computation-to-communication ratio</b>: time spent calculating divided by time spent communicating.</p>
+                <ul><li><b>Speedup</b>: $S = T(1)/T(p)$ where $T(p)$ is the execution time on $p$ processors.</li>
+                <li><b>Efficiency</b>: $E = S/p = T(1)/(T(p) \times p)$</li>
+                <li><b>Cost</b>: $C = T(p) \times p$</li>
+                <li><b>Scalability, strong</b>: efficiency changes for fixed data size, varying $p$.</li>
+                <li><b>Scalability, weak</b>: efficiency changes for varying data size, varying $p$.</li>
+                <li><b>Computation-to-communication ratio</b>: time spent calculating divided by time spent communicating.</li></ul>
                 </section>
 
                 <section><h3>Simple example: summation of an array</h3>
@@ -116,7 +157,9 @@
 
                 <section><h4>Simple example: summation of an array</h4>
                 <p>Parallel code on $p=8$ PEs:</p>
-                <p>Total time: $T(8,n) = 3 + 3 + 3 + n/8 - 1 + 3 + 1 + 3 + 1 + 3 + 1$. For $n=1024$, $T(8,1024) = 148$ so the speedup is $T(1,1024)/T(8,1024) = 6.91$ and the efficiency is $86%$.</p>
+                <p>Total time:</p>
+                <p>$$T(8,n) = 3 + 3 + 3 + n/8 - 1 + 3 + 1 + 3 + 1 + 3 + 1$$</p> 
+                <p>For $n=1024$, $T(8,1024) = 148$ so the speedup is $T(1,1024)/T(8,1024) = 6.91$ and the efficiency is $86%$.</p>
                 </section>
 
                 <section><h4>Simple example: summation of an array</h4>
@@ -125,13 +168,13 @@
                        <li>Computing local sums: $n/p - 1 = 2^{k-q} - 1$</li>
                        <li>Collecting partial results: $3q$</li>
                        <li>Adding partial results: $q$</li></ul></p>
-                <p>Total time: $T(p,n) = T(2^q,2^k) = 3q + 2^{k-q} - 1 + 3q + q = 2^{k-q} - 1 + 7q$.</p>
+                <p>Total time: $$T(p,n) = T(2^q,2^k) = 3q + 2^{k-q} - 1 + 3q + q = 2^{k-q} - 1 + 7q$$</p>
                 <p>When $p \ll n$ then $k \gg q$ and the compute time term $2^{k-q}$ dominates (efficiency is high).</p>
                 <p>When $p \approx n$ then $k \approx q$ and the communication term $7q$ dominates (efficiency is low).</p>
                 </section>
 
                 <section><h4>Simple example: summation of an array</h4>
-                <img src="strong_scalability_figure.png" width="800">
+                <img src="introduction_figs/strong_scalability_figure.png" width="800">
                 <p>Algorithm is not strongly scalable</p>
                 </section>
 
@@ -140,7 +183,7 @@
                 </section>
 
                 <section><h4>Simple example: summation of an array</h4>
-                <img src="weak_scalability_figure.png">
+                <img src="introduction_figs/weak_scalability_figure.png">
                 <p>Algorithm is <b>weakly</b> scalable</p>
                 </section>
 
@@ -152,7 +195,7 @@
 
                 <section><h4>General case, computation-to-communication ratio</h4>
                 <p>Computation-to-communication ratio: $\gamma = \alpha/\beta$. In the limit $\gamma \to 0$ the speedup tends to zero (for $q > 0$):</p>
-                <p>$S_{\gamma}(2^q,2^k) = \frac{\gamma(2^k - 1)}{2q + \gamma(2^{k-q} - 1 + q)}$ and $\lim_{\gamma \to 0} S_{\gamma}(2^q,2^k) = 0$.</p>
+                <p>$$S_{\gamma}(2^q,2^k) = \frac{\gamma(2^k - 1)}{2q + \gamma(2^{k-q} - 1 + q)}$$ and $$\lim_{\gamma \to 0} S_{\gamma}(2^q,2^k) = 0$$</p>
                 </section>
 
                 <section><h4>General case, computation-to-communication ratio</h4>
@@ -191,7 +234,7 @@
 
                 <section><h4>Distributed memory systems, data partitioning</h4>
                 <p>Data partitioning is a key issue in programming distributed memory systems.</p>
-                <img src="partition_8x8_figure.png" width=500>
+                <img src="introduction_figs/partition_8x8_figure.png" width=500>
                 <p>Example of partitioning an $8 \times 8$ array onto $4$ processes: each has a $4 \times 4$ submatrix.</p>
                 <p>Stencil code: 5-point stencil requires each process to store an additional row and column to be received from another process. It must also send a row and column to another process.</p>
                 </section>
@@ -225,7 +268,7 @@
                 </section>
 
                 <section><h4>Design considerations: how to parallelise</h4>
-                <img src="prefix_sum_figure.png">
+                <img src="introduction_figs/prefix_sum_figure.png">
                 </section>
 
                 <section><h4>Design considerations: data partitioning</h4>
@@ -240,7 +283,7 @@
                 <section><h4>Design considerations: task parallelism</h4>
                 <p>Assigns different tasks to different processes/threads.</p>
                 <p>Example of image classification: different binary classifier run on each processor, with results merged at the end.</p>
-                <img src="ternary_classifier_figure.png">
+                <img src="introduction_figs/ternary_classifier_figure.png">
                 </section>
 
                 <section><h4>Design considerations: load balancing</h4>
@@ -250,7 +293,7 @@
                 </section>
 
                 <section><h4>Design considerations: model parallelism</h4>
-                <img src="ann_gpu_figure.png" width=400>
+                <img src="introduction_figs/ann_gpu_figure.png" width=400>
                 <p>Large complex neural nets often exceed the memory available to a GPU.</p>
                 <p>Model parallelism can be implemented where the weights of the network are split across GPUs, and each GPU works on part of the model.</p>
                 <p> This requires the output vector of each layer of the full net to be gathered in each GPU before the next can be calculated (i.e. communication and synchronisation are both required).</p>
@@ -268,32 +311,63 @@
 			</div>
 		</div>
 
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/js/reveal.js"></script>
+<script>
 
-		<script>
-			// More info about config & dependencies:
-			// - https://github.com/hakimel/reveal.js#configuration
-			// - https://github.com/hakimel/reveal.js#dependencies
-			Reveal.initialize({
-				hash: true,
-                transition: 'none',
+require(
+    {
+      // it makes sense to wait a little bit when you are loading
+      // reveal from a cdn in a slow connection environment
+      waitSeconds: 15
+    },
+    [
+      "https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/lib/js/head.min.js",
+      "https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/js/reveal.js"
+    ],
 
-                math: {
-		                mathjax: 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js',
-                        // mathjax: '/home/graeme/Documents/talks/reveal.js/MathJax-2.7.3/MathJax.js',
-		                config: 'TeX-AMS_HTML-full', // See http://docs.mathjax.org/en/latest/config-files.html
-		                // pass other options into `MathJax.Hub.Config()`
-		                TeX: { Macros: { RR: "{\\bf R}" } }
-	                  },
+    function(head, Reveal){
 
-				dependencies: [
-					{ src: 'https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/plugin/markdown/marked.js' },
-					{ src: 'https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/plugin/markdown/markdown.js' },
-					{ src: 'https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/plugin/highlight/highlight.js' },
-					{ src: 'https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/plugin/notes/notes.js', async: true },
-                    { src: 'https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/plugin/math/math.js', async: true }
-				]
-			});
-		</script>
+        // Full list of configuration options available here: https://github.com/hakimel/reveal.js#configuration
+        Reveal.initialize({
+            controls: true,
+            progress: true,
+            history: true,
+
+            transition: "slide",
+
+            // Optional libraries used to extend on reveal.js
+            dependencies: [
+                { src: "https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/plugin/highlight/highlight.js" }
+            ]
+        });
+
+        var update = function(event){
+          if(MathJax.Hub.getAllJax(Reveal.getCurrentSlide())){
+            MathJax.Hub.Rerender(Reveal.getCurrentSlide());
+          }
+        };
+
+        Reveal.addEventListener('slidechanged', update);
+
+        function setScrollingSlide() {
+            var scroll = false
+            if (scroll === true) {
+              var h = $('.reveal').height() * 0.95;
+              $('section.present').find('section')
+                .filter(function() {
+                  return $(this).height() > h;
+                })
+                .css('height', 'calc(95vh)')
+                .css('overflow-y', 'scroll')
+                .css('margin-top', '20px');
+            }
+        }
+
+        // check and set the scrolling slide every time the slide change
+        Reveal.addEventListener('slidechanged', setScrollingSlide);
+
+    }
+
+);
+</script>
 	</body>
 </html>
