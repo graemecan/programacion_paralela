@@ -1,0 +1,1541 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="X-UA-Compatible" content="chrome=1" />
+
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+
+<title>Modern architectures</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+<!-- General and theme style sheets -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/css/reveal.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/css/theme/white.css" id="theme">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/lib/css/zenburn.css">
+
+<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+<script>
+if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = 'https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/css/print/pdf.css';
+        document.getElementsByTagName( 'head' )[0].appendChild( link );
+}
+
+</script>
+
+<!--[if lt IE 9]>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/lib/js/html5shiv.js"></script>
+<![endif]-->
+
+<!-- Loading the mathjax macro -->
+<!-- Load mathjax -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS_HTML"></script>
+    <!-- MathJax configuration -->
+    <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+            displayMath: [ ['$$','$$'], ["\\[","\\]"] ],
+            processEscapes: true,
+            processEnvironments: true
+        },
+        // Center justify equations in code and markdown cells. Elsewhere
+        // we use CSS to left justify single line equations in code cells.
+        displayAlign: 'center',
+        "HTML-CSS": {
+            styles: {'.MathJax_Display': {"margin": 0}},
+            linebreaks: { automatic: false }
+        }
+    });
+    </script>
+    <!-- End of mathjax configuration -->
+
+<!-- Get Font-awesome from cdn -->
+<!--<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.css">-->
+
+
+        <style type="text/css">
+            .container{
+                        display: flex;
+                      }
+            .col{
+                      flex: 1;
+                }
+            .reveal section p {
+                      display: inline-block;
+                      font-size: 0.6em;
+                      line-height: 1.2em;
+                      vertical-align: top;
+                      text-align: left;
+            }
+            .reveal section li {
+                      font-size: 0.6em;
+            }
+            .reveal section td {
+                      font-size: 0.6em;
+            }
+            .reveal section img {
+                      border: none;
+            }
+        </style>
+
+	</head>
+	<body>
+			<div class="reveal">
+			<div class="slides">
+
+                <section><h1>OpenMP</h1>
+                </section>
+
+				<section><h3>Introduction</h3>
+                <p>OpenMP is an API (application programming interface) for platform-independent shared-memory parallel programming in C, C++ and Fortran.</p>
+                <p>Version 5.0 is now available (from 2018) although this will not yet be implemented in most compilers.</p>
+                <p>To install OpenMP on Linux:</p>
+                <pre><code>sudo apt-get install libomp-dev</code></pre>
+                <p>To compile a code with OpenMP (and the gcc compiler): <pre><code>gcc &ltcode_name&gt -fopenmp</code></pre></p>
+                <p>Compiling an OpenMP code without this flag simply gives a sequential code.</p>
+                </section>
+
+                <section><h3>Basics</h3>
+                <p><ul><li>Philosophy: augment sequential code with <b>pragmas</b> that indicate to the compiler how to parallelize.</li>
+                       <li>The compiler will ignore any pragmas is does not recognise (but we can use <code>-Wunknown-pragmas</code> to report any unknown pragmas.</li>
+                       <li>Number of threads can be set with the environment variable OMP_NUM_THREADS, or with <code>set_num_threads()</code> in the code itself. We refer to the group of threads currently executing the code as a <b>team</b>.</li></ul></p>
+                </section>
+
+                <section><h4>Basics</h4>
+                <p><img src="openmp_figs/multithread.jpg"></p>
+                </section>
+
+                <section><h4>First code: <em>hello world</em></h4>
+                <pre><code>#include &ltstdio.h&gt
+
+int main() {
+    #pragma omp parallel
+    printf("Hello World!");
+}</pre></code>
+                <p>Listing 6.1</p>
+                </section>
+
+                <!--<section><h4>Analysing the code</h4>
+                <p><ul><li><code>#include &ltstdio.h&gt</code> includes the "stdio" (standard input/output) header file where the "printf" function is defined.</li>
+                       <li><code>int main()</code> declares the beginning of the "main" function and specifies it will return an integer. Every C code has a "main" where the code execution begins. Note the use of "{" and "}" to specify the function block.</li>
+                       <li><code>#pragma omp parallel</code> is the instruction to the compiler to parallelise the statement that follows and run it in all threads.</li>
+                       <li><code>printf("Hello World!");</code> prints the given string to the screen.</li></ul></p> 
+                       <p>Note the ";" at the end of the printf statement. All statements in C <b>must</b> be terminated with ";". This is a very common bug, especially for Python programmers!</p>
+                </section>-->
+
+                <section><h4>OpenMP runtime library</h4>
+                <p>There is a runtime library that contains functions that can access information about the threads.</p>
+                <pre><code>#include &ltstdio.h&gt
+#include &ltomp.h&gt
+
+int main() {
+    #pragma omp parallel num_threads(4)
+    {
+        int i = omp_get_thread_num();
+        int n = omp_get_num_threads();
+        printf("Hello World from thread %d of %d.",i,n);
+    }
+}</code></pre>
+                <p>Listing 6.2</p>
+                </section>
+
+                <section><h4>Analysing the code</h4>
+                <p><ul><li><code>#include &ltomp.h&gt</code> includes the OpenMP runtime library header file where the function definitions for <code>omp_get_thread_num</code> and <code>omp_get_num_threads</code> are given.
+                       <li><code>int i = omp_get_thread_num();</code> declares the variable <code>i</code> as an integer (thus specifying it occupies 2 or 4 bytes, depending on compiler/system) and then assigns it the value returned by the <code>omp_get_thread_num</code> function.</li>
+                       <li>Note that <code>omp_get_thread_num()</code> is a function call without arguments, but we must include the parentheses (just like in Python).</li>
+                       <li><code>printf("Hello World from thread %d of %d.",i,n);</code> shows how to print variables to the screen. The <code>%d</code> is a <em>format specifier</em> that tells the compiler we will display a <em>signed integer</em>.</li></ul></p> 
+                <p>C has various format specifiers: <a href="https://codeforwin.org/2015/05/list-of-all-format-specifiers-in-c-programming.html">https://codeforwin.org/2015/05/list-of-all-format-specifiers-in-c-programming.html</a></p>
+                </section>
+
+                <section><h4>Masking parts of the code</h4>
+                <p>We cannot compile the previous code without <code>-fopenmp</code> because it uses OpenMP runtime library files.</p>
+                <p>We can avoid this issue by using preprocessor directives:</p>
+                <pre><code>#if defined(_OPENMP)
+#include &ltomp.h&gt
+#endif
+...
+#if defined(_OPENMP)
+// code explicitly depending on omp.h
+#else
+// refactored code not depending on omp.h
+#endif</code></pre>
+                </section>
+
+                <!--<section><h4>Práctica</h4>
+                <p>Modificar el código de listing 6.2 para que se puede compilarlo sin <code>-fopenmp</code></p>
+                </section>-->
+
+                <section><h3>Parallel for</h3>
+                <pre><code>#pragma omp parallel for
+for (...) {
+    ...
+}// this is a compact version of...</code></pre>
+                <pre><code>#pragma omp parallel
+{
+    #pragma omp for
+    for (...) {
+        ...
+    }
+}</code></pre>
+                <p>If we do not use "#pragma omp for" then <b>each thread</b> would run the whole for loop!</p>
+                </section>
+
+                <section><h4>Parallel for</h4>
+                <p><ul><li>This splits the $n$ indices in the loop into pieces of size $n/p$ where $p$ is the number of threads.</li>
+                       <li>Thus the compiler needs to determine the total number of iterations at compile time.</li>
+                       <li>Therefore we cannot manipulate the iteration index or its bounds in the body of the <code>for</code> loop.</li></ul></p>
+                <p>Restrictions:</p>
+                <p><ol><li>Loop iteration variable must be an integer (OpenMP v2.0). Unsigned integers allowed from v3.0.</li>
+                       <li>Loop control parameters must be the same for all threads.</li>
+                       <li>We cannot branch out of a loop, including early exits using <code>break</code>.</li></ol></p>
+                <p>OpenMP just parallelises the loop among threads. We (the programmers) must ensure there are no <em>race conditions</em>!</p>
+                </section>
+
+                <section><h3>Race condition</h3>
+                <p><ul><li>when two (or more) operations take place on the same piece of data, leading to potential errors due to the operations taking place in the wrong order.</li></ul></p>
+                </section>
+
+                <section><h4>Vector addition</h4>
+                <p>Compute the sum of two integer-valued vectors: $z[i] = x[i]+y[i]$.</p>
+                <pre><code>#include &ltstdio.h&gt
+#include &ltstdlib.h&gt
+#include &ltomp.h&gt
+
+#define num_entries 1000000
+
+int x[num_entries];
+int y[num_entries];
+int z[num_entries];
+
+int main() {
+
+    double end_time, start_time, time_spent;
+
+    #pragma omp parallel for
+    for (int i = 0; i &lt num_entries; i++) {
+        x[i] = i;
+        y[i] = num_entries - i;
+    }
+
+    start_time = omp_get_wtime();
+
+    for  (int i = 0; i &lt num_entries; i++) {
+        z[i] = x[i] + y[i];
+    }
+
+    end_time = omp_get_wtime();
+    time_spent = end_time - start_time;
+    printf("Time in serial sum: %lf\n",time_spent);
+
+    start_time = omp_get_wtime();
+
+    #pragma omp parallel for
+    for (int i = 0; i &lt num_entries; i++) {
+        z[i] = x[i] + y[i];
+    }
+
+    end_time = omp_get_wtime();
+    time_spent = end_time - start_time;
+    printf("Time in parallel sum: %lf\n",time_spent);
+
+    #pragma omp parallel for
+    for (int i = 0; i &lt num_entries; i++)
+        if (z[i] - num_entries)
+            printf("error at position %d",i);
+
+}</code></pre>
+                </section>
+
+                <section><h4>Vector addition: execution times</h4>
+                <img src="openmp_figs/timings_6_3.png">
+                </section>
+
+                <section><h4>Vector addition: speedup</h4>
+                <img src="openmp_figs/speedup_6_3.png">
+                </section>
+
+                <section><h4>Vector addition: comments</h4>
+                <p>Each parallel loop is <em>embarrassingly parallel</em> because there are no data dependencies between elements of the vectors.</p>
+                <p>The computation here is so simple that the algorithm spends much more time in memory access than in calculation: it is <em>memory-bound</em>.</p>
+                <p>We should not expect much increase in performance for more cores (threads), and in fact would likely see degradation.</p>
+                </section>
+
+                <section><h3>Variable sharing and privatisation</h3>
+                <p>The following code prints all index combinations $(i,j)$ to the screen (without error in C99).</p>
+                <pre><code>#include &ltstdio.h&gt
+
+int main () {
+
+    #pragma omp parallel for
+    for (int i = 0; i &lt 4; i++)
+        for (int j = 0; j &lt 4; j++)
+            printf("%d %d\n",i,j);
+}</code></pre>
+                </section>
+
+                <section><h4>Variable sharing and privatisation</h4>
+                <p>Older versions of C do not permit variable declarations within the <code>for</code> loop. We must instead write:</p>
+                <pre><code>#include &ltstdio.h&gt
+
+int main () {
+
+    int i,j; // variables declared outside loops
+
+    #pragma omp parallel for
+    for (i = 0; i &lt 4; i++)
+        for (j = 0; j &lt 4; j++)
+            printf("%d %d\n",i,j);
+}</code></pre>
+                <p>This code gives erroneous results.</p>
+                </section>
+
+                <section><h4>Variable sharing and privatisation</h4>
+                <p><pre><code>#pragma omp parallel for
+for (i = 0; i &lt 4; i++)
+    for (j = 0; j &lt 4; j++)</code></pre></p>
+                <p><ul><li>The problem is that declaring the $j$ index outside the loops changes its scope. Effectively it becomes a global variable for all threads.</li>
+                       <li>Thus each thread changes the global value (seen by all other threads) and so changes the loop behaviour for the other threads.</li>
+                       <li>The problem is solved by using <code>#pragma omp parallel for private(j)</code>, which ensures each thread has its own local copy of $j$.</li></ul></p>
+                </section>
+
+                <section><h4>Variable sharing and privatisation</h4>
+                <p><pre><code>#include &ltstdio.h&gt
+
+int main () {
+
+    int i = 1;
+
+    #pragma omp parallel private(i)
+    {
+        printf("%d\n",i); // i not initialised, value is not defined
+    }
+}</code></pre></p>
+                <p>The private $i$ within the parallel block is not assigned a value.</p>
+                </section>
+
+                <section><h4>Variable sharing and privatisation</h4>
+                <p><pre><code>#include &ltstdio.h&gt
+
+int main () {
+
+    int i = 1;
+
+    #pragma omp parallel firstprivate(i)
+    {
+        printf("%d\n",i); // i not initialised, value is not defined
+    }
+}</code></pre></p>
+                <p>Using <code>firstprivate</code> we copy the value of the global $i$ to the local one.</p>
+                </section>
+
+                <section><h4>Variable sharing and privatisation</h4>
+                <p>Accessing thread-local variables outside their scope:</p>
+                <pre><code>#include &ltstdio.h&gt
+#include &ltomp.h&gt
+
+int main () {
+
+    int num = omp_get_max_threads();
+    int aux[num];
+
+    int i = 1;
+
+    #pragma omp parallel firstprivate(i) num_threads(num)
+    {
+        int j = omp_get_thread_num();
+        i += j;
+        aux[j] = i;
+    }
+
+    for (int k = 0; k&ltnum; k++){
+        printf("%d\n",aux[k]);
+    }
+}</code></pre>
+                <p>Privatised variables are not unique: each thread has its own value. More sophisticated methods for recovering thread-local variables are called <em>reductions</em>.</p>
+                </section>
+
+                <section><h4>Variable sharing and privatisation</h4>
+                <p>In the case of loops, we can get the current value of a private variable after the last iteration using <code>lastprivate</code>:</p>
+                <pre><code>#include &ltstdio.h&gt
+
+int main () {
+    int i;
+
+    #pragma omp parallel for lastprivate(i) num_threads(16)
+    for (int j = 0; j &lt 16; j++)
+        i = j;
+
+    printf("%d\n",i);
+
+}</code></pre>
+                <p>The result is 15. Without <code>lastprivate</code> the value of $i$ is the number of whatever thread finished last. The returned value is unique if it does not depend on the execution order of the iterations (as in this example).</p>
+                </section>
+
+                <section><h4>Variable sharing and privatisation</h4>
+                <p><ul><li><code>lastprivate</code> and <code>firstprivate</code> can be combined to copy a global value into parallel scope, and then return the last iteration of the thread-local value. It is better practice to explicitly transfer thread-local to global using constructions like the array <code>aux</code>.</li>
+                       <li>Variables that are not private are shared by default (this can be made explicit using <code>shared</code>).</li>
+                       <li>We can privatise/share more than one variable, e.g. <code>private(i, j)</code>.
+                       <li>Thread-local arrays can be allocated and deallocated within the parallel scope.</li></ul></p>
+                </section>
+
+                <section><h3>Matrix vector multiplication</h3>
+                <p>Multiplication of $m \times n$ matrix by $n$-dimensional vector:</p>
+                <p>$b_i = \sum_{j=0}^{n-1} A_{ij} \cdot x_j$ for all $i \in \{0,\ldots,m-1\}$.</p>
+                </section>
+
+                <section><h4>Matrix vector multiplication</h4>
+                <pre><code>#include &ltstdio.h&gt
+#include &ltstdbool.h&gt
+#include &ltstdlib.h&gt
+#include &ltomp.h&gt
+
+void init(int A[], int x[], int m, int n) {
+
+    for (int row = 0; row &lt m; row++)
+        for (int col = 0; col &lt n; col++)
+            A[row*n+col] = row &gt= col ? 1 : 0;
+
+    for (int col = 0; col &lt n; col++)
+        x[col] = col;
+}
+
+void mult(int A[], int x[], int b[], int m, int n, bool parallel){
+
+    #pragma omp parallel for if(parallel)
+    for (int row = 0; row &lt m; row++) {
+        int accum = 0;
+        for (int col = 0; col &lt n; col++)
+            accum += A[row*n+col]*x[col];
+        b[row] = accum;
+    }
+}
+
+int main () {
+    int n = 40000;
+    int m = 40000;
+
+    int* A = malloc(m*n * sizeof(int));
+    int* x = malloc(n * sizeof(int));
+    int* b = malloc(m * sizeof(int));
+
+    double start_time, end_time, time_spent;
+
+    init(A, x, m, n);
+
+    start_time = omp_get_wtime();
+
+    for (int k = 0; k &lt 3; k++) {
+        mult(A, x, b, m, n, false);
+    }
+
+    end_time = omp_get_wtime();
+    time_spent = end_time - start_time;
+    printf("Time in serial sum: %lf\n",time_spent);
+
+    start_time = omp_get_wtime();
+
+    for (int k = 0; k &lt 3; k++) {
+        mult(A, x, b, m, n, true);
+    }
+
+    end_time = omp_get_wtime();
+    time_spent = end_time - start_time;
+    printf("Time in parallel sum: %lf\n",time_spent);
+
+    for (int index = 0; index &lt m; index++)
+        if (b[index] != index*(index+1)/2)
+            printf("Error at position %d %d\n",index,b[index]);
+}</code></pre>
+                <p>The matrix is initialised with $1$ below the diagonal and $0$ everywhere else. The vector $x$ is initialised with ascending integers. Thus $b$ should contain the partial sums from $0$ to $i$.</p>
+                </section>
+
+                <section><h4>Matrix vector multiplication</h4>
+                <p>Only parallel code:</p>
+                <p><code>#pragma omp parallel for if(parallel)</code></p>
+                <p>The pragma contains an if statement accepting a Boolean argument to switch the parallelised part on or off.</p>
+                <p>For $m=n=40000$ this code gives approximately $11.4$s for the serial sum and $3.1$s for the parallelised sum (on 8 threads, 4 physical cores). A speedup of $3.7$.</p>
+                <p>Note that on my machine $m$ and $n$ cannot be much bigger or the array $A$ exceeds the memory available! $40000 \times 40000$ $4$ byte integers $= 6.4 \times 10^9$ bytes, or about $6$Gb.</p>
+                <p>This code is again <em>memory-bound</em> so it will not scale well to many cores.</p>
+                </section>
+
+                <section><h3>Basic parallel reductions (nearest-neighbour classifier)</h3>
+                <p>We study the performance of a one-nearest-neighbour (1NN) classifier trained on the MNIST dataset of handwritten digits.</p>
+                <p>This is a machine-learning (AI) application...</p>
+                </section>
+
+                <section><h4>Nearest-neighbour classifier</h4>
+                <p><ul><li>Requires a pairwise distance measure $dist(X_{\text{test}}^{(i)},X_{\text{train}}^{(j)})$ that defines the "similarity" between the two objects $X_{\text{test}}^{(i)}$ and $X_{\text{train}}^{(j)}$.</li>
+                       <li>Goal: classify based on a training set of objects $X_{\text{train}}^{(j)}$ and their labels $Y_{\text{train}}^{(j)}$.</li>
+                       <li>Operation of the classifier: $$Y_{\text{test}}^{(i)} \leftarrow Y_{\text{train}}^{(j*)} \quad \text{where} \quad j^* = \underset{j}{\text{argmin}}\; dist(X_{\text{test}}^{(i)},X_{\text{train}}^{(j)})$$</li>
+                       <li>Basic idea: you have a set of objects and labels. When you get a new object without a label you compare it to your set of objects and find the nearest match, assigning the associated label to your new object.</li></ul></p>
+                </section>
+
+                <section><h4>MNIST dataset</h4>
+                <img src="openmp_figs/mnist.png" width=400>
+                </section>
+
+                <section><h4>MNIST dataset</h4>
+                <p><ul><li>65000 images stored as gray-scale $28 \times 28$ arrays, labelled from $0$ to $9$.</li>
+                       <li>We use 55000 images as the training set, and the remaining 10000 as the test set.</li>
+                       <li>Each image will be stored as a vector of $d=784$ intensity values.</li>
+                       <li>The $n$ images of the training set are stored as a matrix $D_{jk}^{\text{train}} = X^{(j)}_{\text{train}}[k]$ of shape $n \times d$ where $j$ denotes the image index and $k$ is the pixel index within each image.</li>
+                       <li>The test set is stored similarly: $D_{ik}^{\text{test}} = X_{\text{test}}^{(i)}[k]$ with shape $m \times d$, storing $m$ images of dimension $d$.</li></ul></p>
+                </section>
+
+                <section><h4>All-pairs distance computation</h4>
+                <p>We want the all-pairs distance matrix $\Delta$ of shape $m \times n$ with squared Euclidean distance as the similarity measure:</p>
+                <p>$$\Delta_{ij} = dist(X_{\text{test}}^{(i)},X_{\text{train}}^{(j)}) = \sum_{k=0}^{d-1}(X_{\text{test}}^{(i)}[k] - X_{\text{train}}^{(j)}[k])^2$$</p>
+                <p>where $i$ is the index over the test set, and $j$ runs over the training set.</p>
+                <p>This calculation has time complexity $\mathcal{O}(m \cdot d \cdot n)$, which is almost three orders of magnitude higher than the memory complexity $\mathcal{O}(m \cdot n)$, so we should see better scaling than in the matrix vector multiplication code.</p>
+                </section>
+
+                <section><h4>All-pairs distance computation: coarse-grained parallelism</h4>
+                <p>By "coarse-grained parallelism" we mean parallelising the outer loops:</p>
+                <pre><code>void all_vs_all(double * test, double * train, double * delta, 
+          int num_test, int num_train, int num_features, bool parallel) {
+
+    #pragma omp parallel for collapse(2) if(parallel)
+    for (int i = 0; i &lt num_test; i++)
+        for (int j = 0; j &lt num_train; j++) {
+            double accum = 0.0;
+            for (int k = 0; k &lt num_features; k++) {
+                const double residue = test[i*num_features+k] 
+                                        - train[j*num_features+k];
+                accum += residue*residue;
+            }
+            delta[i*num_train+j] = accum;
+        }
+}</code></pre>
+                </section>
+
+                <section><h4>All-pairs distance computation: coarse-grained parallelism</h4>
+                <p>The <code>collapse(2)</code> addition to the pragma causes the two outer loops to run as if they were a single loop over a single hyper-index $h$:</p>
+                <pre><code>#pragma omp parallel for
+for (int h = 0; h &lt num_test*num_train; h++) {
+    int i = h / num_test;
+    int j = h % num_test;
+}</code></pre>
+                <p>This helps to ensure that all cores execute threads if, for example, there are less test images than cores.</p>
+                <p>The inner loop over each image's pixels is <em>not</em> parallelised here. This would be "fine-grained parallelism".</p>
+                </section>
+
+                <section><h4>All-pairs distance computation: fine-grained parallelism</h4>
+                <p>A simplistic attempt would be the following:</p>
+                <pre><code>void all_vs_all(double * test, double * train, double * delta, 
+          int num_test, int num_train, int num_features, bool parallel) {
+
+    for (int i = 0; i &lt num_test; i++)
+        for (int j = 0; j &lt num_train; j++) {
+            double accum = 0.0;
+            #pragma omp parallel for
+            for (int k = 0; k &lt num_features; k++) {
+                const double residue = test[i*num_features+k] 
+                                        - train[j*num_features+k];
+                accum += residue*residue; // RACE CONDITION!
+            }
+            delta[i*num_train+j] = accum;
+        }
+}</code></pre>
+                </section>
+
+                <section><h4>Fine-grained parallelism: race condition</h4>
+                <p>The parallelised version of the inner loop introduces a race condition because the load-modify-store operation <code>accum += some_value</code> on the shared variable <code>accum</code> is not <em>atomic</em>.</p>
+                <p>An atomic operation is one that completes in a single step relative to other threads. The idea is that no other thread can "interfere" within an atomic operation.</p>
+                <p>OpenMP allows us to force the <code>accum</code> operation to be atomic...</p>
+                </section>
+
+                <section><h4>Fine-grained parallelism: atomic operation</h4>
+                <pre><code>void all_vs_all(double * test, double * train, double * delta, 
+          int num_test, int num_train, int num_features, bool parallel) {
+
+    for (int i = 0; i &lt num_test; i++)
+        for (int j = 0; j &lt num_train; j++) {
+            double accum = 0.0;
+            #pragma omp parallel for
+            for (int k = 0; k &lt num_features; k++) {
+                const double residue = test[i*num_features+k] 
+                                        - train[j*num_features+k];
+                #pragma omp atomic // forcing atomicity
+                accum += residue*residue;
+            }
+            delta[i*num_train+j] = accum;
+        }
+}</code></pre>
+                </section>
+
+                <section><h4>Fine-grained parallelism: mutex</h4>
+                <p>Another solution is to use <em>mutex</em> (mutual exclusion) on the statement <code>accum += some_value</code>.</p>
+                <p>Mutual exclusion declares some part of the code to be <em>critical</em>. A thread of execution can never enter its critical section at the same time as another thread.</p>
+                <p>Mutex effectively makes the code serial in the critical section.</p>
+                </section>
+
+                <section><h4>Fine-grained parallelism: mutex</h4>
+                <pre><code>void all_vs_all(double * test, double * train, double * delta, 
+          int num_test, int num_train, int num_features, bool parallel) {
+
+    for (int i = 0; i &lt num_test; i++)
+        for (int j = 0; j &lt num_train; j++) {
+            double accum = 0.0;
+            #pragma omp parallel for
+            for (int k = 0; k &lt num_features; k++) {
+                const double residue = test[i*num_features+k] 
+                                        - train[j*num_features+k];
+                #pragma omp critical // using mutual exclusion 
+                                     // (forcing serial execution)
+                accum += residue*residue;
+            }
+            delta[i*num_train+j] = accum;
+        }
+}</code></pre>
+                </section>
+
+                <section><h4>Fine-grained parallelism: atomic or mutex</h4>
+                <p>None of these methods are ideal as they either give the wrong result or degrade performance.</p>
+                <p><ul><li><code>#pragma omp critical</code> may be used anywhere.</li>
+                      <li><code>#pragma omp atomic</code> only applies to particular operations such as +=, *=, ++, etc.</li></ul></p>
+                </section>
+
+                <section><h4>Fine-grained parallelism: reduction</h4>
+                <p>We can resolve this by using a <em>reduction</em> operation across private variables.</p>
+                <p><ul><li>Each thread declares thread-local <code>accum</code> initialised with $0$.</li>
+                       <li>The summation is performed by each thread independently ($n/p$ numbers, $n$ iterations, $p$ threads).</li>
+                       <li>Sum partial results computed by each thread and add this to the global value.</li>
+                       <li>OpenMP provides the <code>reduction</code> keyword to implement this procedure.</li></ul></p>
+                </section>
+
+                <section><h4>Fine-grained parallelism: reduction</h4>
+                <pre><code>void all_vs_all(double * test, double * train, double * delta, 
+          int num_test, int num_train, int num_features, bool parallel) {
+
+    for (int i = 0; i &lt num_test; i++)
+        for (int j = 0; j &lt num_train; j++) {
+            double accum = 0.0;
+            #pragma omp parallel for reduction(+:accum)
+            for (int k = 0; k &lt num_features; k++) {
+                const double residue = test[i*num_features+k] 
+                                        - train[j*num_features+k];
+                accum += residue*residue;
+            }
+            delta[i*num_train+j] = accum;
+        }
+}</code></pre>
+                </section>
+
+                <section><h4>Fine-grained parallelism: reduction</h4>
+                <p><ul><li>Syntax: <code>reduction(operator:variable,...)</code></li>
+                       <li>Operators: built-in support for +, *, min, max, &, |, ^, &&, ||</li>
+                       <li>Custom associative operators with individual initialisation and complex pairwise combination rules can be defined.</li></ul></p>
+                </section>
+
+                <section><h4>Parallelised label prediction (inference)</h4>
+                <p>Returning to the 1NN classifier, we now have the all-pairs distance matrix $\Delta$. Now we need to assign labels.</p>
+                <p><ul><li>For fixed index $i$ we scan through all $n$ distance scores $\Delta_{ij}$ and determine index $j^*$ of nearest image $X_{\text{train}}^{(j^*)}$ in the training set.</li>
+                       <li>We then set predicted class label to $Y_{\text{train}}^{(j^*)}$.</li>
+                       <li>Given that the "test" set is actually a classified set, we can compare the true classification $Y_{\text{test}}^{(i)}$ with the prediction.</li>
+                       <li>The labels for the MNIST dataset are stored as $10$-element vectors, where the index of the only non-zero element (equal to $1$) corresponds to the digit (e.g. [0,0,0,1,0,0,0,0,0,0] is $3$).</li></ul></p>
+                </section>
+
+                <section><h4>Parallelised label prediction (inference)</h4>
+                <pre><code>double accuracy(int * label_test, int * label_train, double * delta, 
+            int num_test, int num_train, int num_classes, bool parallel) {
+
+    int counter = 0;
+
+    #pragma omp parallel for reduction(+:counter) if(parallel)
+    for (int i = 0; i &lt num_test; i++) {
+
+        double bsf = DBL_MAX; // from &ltfloat.h&gt
+        int jst = -1; // dummy value
+
+        for (int j = 0; j &lt num_train; j++) {
+            const double value = delta[i*num_train+j];
+            if (value &lt bsf) {
+                bsf = value;
+                jst = j;
+            }
+        }
+
+        bool match = true;
+        for (int k = 0; k &lt num_classes; k++)
+            match &&= label_test[i*num_classes+k] 
+                          == label_train[jst*num_classes+k];
+
+        counter += match;
+    }
+
+    return (double) counter/(double) num_test;
+}</code></pre>
+                </section>
+
+                <section><h4>Parallelised label prediction (inference)</h4>
+                <p><ul><li>This code uses a "coarse-grained" parallelisation with the pragma on the outer loop over the test set images.</li>
+                       <li>First stage of code: determine $j^*$ for fixed index $i$ by searching for smallest value in $\Delta_{ij}$</li>
+                       <li>Second stage: compare the associated predicted label with the true label.</li>
+                       <li>Both inner loops could be parallelised in a "fine-grained" manner:</li></ul></p>
+                       <p>First loop would be an <code>argmin</code> reduction (minor modification of a <code>min</code> reduction)</p>
+                       <p>Second loop would be <code>#pragma omp parallel for reduction(&&:match)</code>.</p>
+                </section>
+
+                <section><h4>Parallelised 1NN classifier: main code</h4>
+                <pre><code>int main(int argc, char* argv[]) {
+
+    // run parallelised when any command line argument is given
+    const bool parallel = argc &gt 1;
+
+    if (parallel) {
+        printf("Running in parallel.\n");
+    }
+    else {
+        printf("Running sequentially.\n");
+    }
+
+    const int num_features = 28*28;
+    const int num_classes = 10;
+    const int num_entries = 65000;
+    const int num_train = 55000;
+    const int num_test = num_entries-num_train;
+
+    double input[num_entries*num_features];
+    double label[num_entries*num_classes];
+    double delta[num_test*num_train];
+
+    load_binary(input, "X_image_file.bin");
+    load_binary(label, "Y_label_file.bin");
+
+    const int inp_off = num_train * num_features;
+    all_vs_all(input + inp_off, input, delta, num_test, num_train, num_features, parallel);
+
+    const int lbl_off = num_train * num_classes;
+    double acc = accuracy(label + lbl_off, label, delta, num_test, num_train, num_classes, parallel);
+
+    printf("Test accuracy: %f",acc);
+}</code></pre>
+                </section>
+
+            <section><h3>Scheduling of imbalanced loops (inner products)</h3>
+            <p>Calculating $C = A \cdot A^T$ (inner product of a matrix) results in a symmetric matrix.</p>
+            <p>Thus we only need to calculate values above the diagonal.</p>
+            <p>Therefore using <code>#pragma omp parallel for</code> for the outer loop of the matrix multiplication leads to <b>load imbalancing</b> because some threads compute more entries.</p>
+            </section>
+
+            <section><h4>Static/dynamic schedules of for-loops</h4>
+            <p>For $p$ threads, partition the set of $m$ rows of $C$ into batches of fixed size $c$ where $1 \leq c \leq \lceil m/p \rceil$</p>
+            <p>Process the $\lceil m/c \rceil$ batches sequentially using the $p$ threads.</p>
+            <p>Special cases: $c = 1$ (cyclic distribution), $c = \lceil m/p \rceil$ (block distribution).</p>
+            <p>Static scheduling: predetermined number of batches assigned to each thread.</p>
+            <p>Dynamic scheduling: consecutively choose next idling thread for unprocessed batch.</p>
+            </section>
+
+            <section><h4>Static/dynamic schedules of for-loops - example</h4>
+            <p>Example: $m = 32$ (32 rows in the matrix $C$) and $p = 4$ (4 threads).</p>
+            <p>Pure block distribution: $c = 8$, so each "batch" consists of $8$ rows of values ($4$ batches).</p>
+            <p>Static scheduling: 1 batch assigned to each thread.</p>
+            <p>Dynamic scheduling: batches dynamically assigned as threads become idle.</p>
+            </section>
+
+            <section><h4>Static/dynamic schedules of for-loops - example</h4>
+            <p>Example: $m = 32$ (32 rows in the matrix $C$) and $p = 4$ (4 threads).</p>
+            <p>Pure cyclic distribution: $c = 1$, so each "batch" is just a single row of values.</p>
+            <p>Static scheduling: $1$ batch assigned to each thread, then we pass through assigning another batch to each thread. In the end we have $8$ batches (rows) for each thread (as before).</p>
+            <p>Dynamic scheduling: batches assigned as threads become idle.</p>
+            </section>
+
+            <section><h4>OpenMP scheduling options</h4>
+            <p><ul><li><code>static</code>: All iterations divided into (roughly) $\lceil m/c \rceil$ chunks each performing $c$ sequential iterations over the $m$ indices. Batches are distributed amongst threads, and if one completes its computation it stays idle until others finish. $c = \lceil m/p \rceil$ if not defined (pure block).</li>
+            <li><code>dynamic</code>: All iterations divided into equal sized chunks, distributed one at a time to the threads once they are idle. $c = 1$ if not defined (pure cyclic).</li>
+            <li><code>guided</code>: Iterations divided into chunks of decreasing size (up to minimum) and batches are dispatched and allocated to threads in the manner of <code>dynamic</code> scheduling. $c = \lceil m/p \rceil$ if not defined.</li>
+            <li><code>auto</code>: scheduling type from the above options is decided by the compiler.</li>
+            <li><code>runtime</code>: scheduling type set by runtime system using <code>OMP_SCHEDULE</code> environment variable.</li></ul></p>
+            </section>
+
+            <section><h4>OpenMP scheduling options</h4>
+            <p><code>static</code> and <code>dynamic</code> schedules are usually sufficient. <code>guided</code> is not frequently used, and the last two options cede control over the scheduling type to the operating system/compiler.</p>
+            <p>Syntax: <code>#pragma omp for schedule(mode, chunk_size)</code> where <code>mode</code> is <code>static</code>/<code>dynamic</code>/etc. and <code>chunk_size</code> is the value of $c$.</p>
+            </section>
+
+            <section><h4>OpenMP scheduling example</h4>
+            <pre><code>#include &ltstdio.h&gt
+#include &ltbool.h&gt
+#include &ltomp.h&gt
+
+#define MODE static
+
+void inner_product(float * data, float * delta, int num_entries, int num_features, bool parallel) {
+    
+    #pragma omp parallel for schedule(MODE) if(parallel)
+    for (int i = 0; i &lt num_entries; i++)
+        for (int j = i; j &lt num_entries; j++) {
+            float accum = 0.0;
+            for (int k = 0; k &lt num_features; k++)
+                accum += data[i*num_entries+k] * data[j*num_entries+k];
+            delta[i*num_entries+j] = accum;
+        }
+}</code></pre>
+            <p>We cannot use <code>collapse(2)</code> here because the inner loop over $j$ depends on $i$.</p>
+            </section>
+
+            <section><h4>OpenMP scheduling example</h4>
+            <pre><code>#include &ltstdio.h&gt
+#include &ltstdlib.h&gt
+#include &ltstdint.h&gt
+#include &ltstdbool.h&gt
+#include &ltomp.h&gt
+
+#define num_pixels 784
+#define num_entries 10000
+#define MODE static
+
+int read_binary_data(char* filename, bool images, int n_values, uint8_t data[]) {
+
+   FILE *fptr;
+   int dummy;
+
+   if ((fptr = fopen(filename,"rb")) == NULL){
+       printf("Error! opening file");
+
+       // Program exits if the file pointer returns NULL.
+       exit(1);
+   }
+
+   for (int i = 0; i &lt 4; i++) {
+       fread(&dummy, sizeof(dummy), 1, fptr);
+   }
+
+   for (int i = 0; i &lt n_values; i++){
+       fread(&data[i], sizeof(uint8_t), 1, fptr);
+   }
+
+   fclose(fptr);
+
+}
+
+void inner_product(uint8_t data[], uint8_t delta[], bool parallel) {
+    
+    #pragma omp parallel for schedule(MODE) if(parallel)
+    for (int i = 0; i &lt num_entries; i++) {
+        for (int j = i; j &lt num_entries; j++) {
+            float accum = 0.0;
+            for (int k = 0; k &lt num_pixels; k++)
+                accum += data[i*num_entries+k] * data[j*num_entries+k];
+            delta[i*num_entries+j] = accum;
+        }
+    }
+}
+
+int main(int argc, char* argv[]) {
+
+    // run parallelised when any command line argument is given
+    const bool parallel = argc > 1;
+
+    double start_time, end_time, time_spent;
+
+    if (parallel) {
+        printf("Running in parallel.\n");
+    }
+    else {
+        printf("Running sequentially.\n");
+    }
+
+    static uint8_t train[num_entries*num_pixels];
+    static uint8_t delta[num_entries*num_entries];
+
+    read_binary_data("t10k-images-idx3-ubyte",true,num_entries,train);
+
+    start_time = omp_get_wtime();
+    inner_product(train, delta, parallel);
+    end_time = omp_get_wtime();
+    time_spent = end_time - start_time;
+    printf("Time in inner product: %lf\n",time_spent);
+  
+    return 0;
+}</code></pre>
+            </section>
+
+            <section><h4>OpenMP scheduling example</h4>
+            <p><table><tr><td></td><td>Time in s</td><td>Speedup</td></tr>
+                      <tr><td>Sequential</td><td>110.9</td><td></td>
+                      <tr><td>static (block)</td><td>34.5</td><td>3.2</td></tr>
+                      <tr><td>static,1 (cyclic)</td><td>27.4</td><td>4.0</td></tr>
+                      <tr><td>static,32 (block-cyclic)</td><td>26.5</td><td>4.2</td></tr>
+                      <tr><td>dynamic (pure cyclic)</td><td>25.5</td><td>4.3</td></tr>
+                      <tr><td>dynamic,32 (block-cyclic)</td><td>25.2</td><td>4.4</td></tr></table></p>
+            </section>
+
+            <section><h3>Advanced reductions (softmax regression)</h3>
+            </section>
+
+            <section><h4>Problems with the 1NN classifier</h4>
+            <p><ul><li>Major disadvantage is the $\mathcal{O}(n)$ search over all $n$ training samples for each of the $m$ test samples in the inference step.</li>
+                   <li>Asymptotic time complexity is $\mathcal{O}(m \cdot n)$, this is too much for very large datasets.</li>
+                   <li>Also this classifier cannot deal with correlations in the features between individual instances of the training set.</li></ul></p>
+            </section>
+
+            <section><h4>Deep neural networks</h4>
+            <p><ul><li>State-of-the-art solution for image classification is a <i>deep neural network</i> (DNN).</li>
+                   <li>A neural network is a set of artificial "neurons" that accept weighted inputs and give some output.</li>
+                   <li>A basic neural network has a layer of input neurons and a layer of output neurons.</li>
+                   <li>Additional layers between the input and output are referred to as "hidden" layers.</li>
+                   <li>A <b>deep</b> neural network is simply a neural network with at least one hidden layer.</ul></p>
+            </section>
+
+            <section><h4>Deep neural networks</h4>
+            <p><img src="openmp_figs/neural_network.png"></p>
+            </section>
+
+            <section><h4>Deep neural networks</h4>
+            <p><img src="openmp_figs/neuron.png"></p>
+            </section>
+
+            <section><h4>Deep neural networks</h4>
+            <p><ul><li>Neural networks are effectively (highly) non-linear functions of the input data.</li>
+                   <li>For image recognition they work by identifying "features" in the images.</li></ul></p>
+            <p><img src="openmp_figs/dnn_features.jpg"></p>
+            </section>
+
+            <section><h4>MNIST example: two-layer neural network</h4>
+            <p><img src="openmp_figs/mnist_softmax.png"></p>
+            </section>
+
+            <section><h4>MNIST example: two-layer neural network</h4>
+            <p><ul><li>Input layer: $d = 28 \times 28 = 784$ neurons.</li>
+                   <li>Determines a class activation score for each of the $c = 10$ classes in the output layer.</li>
+                   <li>Network is a non-linear function $f_{\theta}$ mapping $m$ vectors $x^{(i)} \in \mathbb{R}^d$ to $m$ vectors $y^{(i)} \in \mathbb{R}^c$ where $\theta$ is a set of trainable parameters.</li>
+                   <li>The parameter set $\theta$ is given by $\theta = (W,b)$ where $W$ is a $c \times d$ matrix, and $b$ a vector of $c$ components (the bias vector).</li>
+                   <li>The inputs to the second layer of neurons (after the input layer) are then: $$z_j^{(i)} = \sum_{k=0}^{d-1} W_{jk} \cdot x_k^{(i)} + b_j \quad \text{for all} \quad i \in {0,\ldots,m-1}, \quad j \in {0,\ldots,c-1}$$</li></ul></p>
+            </section>
+
+            <section><h4>MNIST example: two-layer neural network</h4>
+            <p><ul><li>We interpret the $j$-th entry of a vector $z^{(i)}$ as the evidence that the $i$-th input image $x^{(i)}$ should be associated to the $j$-th class label.</li>
+                   <li>The MNIST label vectors $y^{(i)}$ use "one-hot encoding": they have a single $1$ and all other elements are zero.</li>
+                   <li>An example: the number $3$ is encoded as $(0,0,0,1,0,0,0,0,0,0)$.</li>
+                   <li>We thus need to normalise the highest value of $z^{(i)}$ to (almost) one and all other values to (almost) zero.</li>
+                   <li>We use a <b>softmax</b> activation function.</li></ul></p>
+            </section>
+
+            <section><h4>MNIST example: two-layer neural network</h4>
+            <p>$$y_j^{(i)} = \text{softmax}(z^{(i)})_j = \frac{\exp(z_j^{(i)} - \mu)}{\sum_{j=0}^{c-1} \exp(z_j^{(i)} - \mu)}$$ for any $\mu \in \mathbb{R}$.</p>
+            <p>This works for any value of $\mu$, although the maximum value in the vector $z^{(i)}$ is usually chosen for floating-point operation stability.</p>
+            </section>
+
+            <section><h4>MNIST example: two-layer neural network</h4>
+            <p><img src="openmp_figs/softmax.jpeg"></p>
+            </section>
+
+            <section><h4>MNIST example: two-layer neural network</h4>
+            <p>Feedforward pass of the two-layer network: $$y_j^{(i)} = \text{softmax}(W \cdot x^{(i)} + b)_j$$</p>
+            <p><ul><li>This is a machine learning algorithm because we adjust the values in $W$ and $b$ to ensure accurate prediction of the label vectors.</li>
+                   <li>We want agreement between $y^{(i)}$ and the actual one-hot encoded label data $\hat{y}^{(i)}$ for the training set.</li></ul></p>
+            </section>
+
+            <section><h4>MNIST example: two-layer neural network</h4>
+            <p>For now we will concentrate on the inference step (using a trained network on our test data):</p>
+            <p><pre><code>#include&ltfloat.h&gt
+#include&ltstdint.h&gt
+#include&ltmath.h&gt
+
+void softmax_regression(float* input, float* output, 
+                        float* weights, float* bias, 
+                        uint64_t n_input, uint64_t n_output) {
+
+    for (uint64_t j = 0; j &lt n_output; j++) {
+        float accum = 0.0;
+        for (uint64_t k = 0; k &lt n_input; k++)
+            accum += weights[j*n_input+k]*input[k];
+        output[j] = accum + bias[j];
+    }
+
+    float norm = 0.0;
+    float mu = FLT_MIN;
+
+    // compute mu = max(z_j)
+    for (uint64_t j = 0; j &lt n_output; j++)
+        mu = fmaxf(mu, output[j]);
+
+    // compute exp(z_j-mu)
+    for (uint64_t j = 0; j &lt n_output; j++)
+        output[j] = exp(output[j]-mu);
+
+    // compute Z = sum_j exp(z_j)
+    for (uint64_t j = 0; j &lt n_output; j++)
+        norm += output[j];
+
+    // compute y_j = exp(z_j)/Z
+    for (uint64_t j = 0; j &lt n_output; j++)
+        output[j] /= norm;
+
+}</code></pre></p>
+            </section>
+
+            <section><h4>MNIST example: inference</h4>
+            <p><ul><li>Fine-grained parallelism could be implemented in these for loops using standard <code>parallel for</code> or parallel reductions.</li>
+                   <li>Entire inference step is <i>embarrassingly parallel</i> for all $m$ images in the test set.</li>
+                   <li>Better to parallelise over different images (data parallelism) than over the individual for loops within the inference step (model parallelism).</li></ul></p>
+            </section>
+
+            <section><h4>MNIST example: inference</h4>
+            <p>Predicted class label is determined using an argmax reduction:</p>
+            <p><pre><code>uint64_t argmax(float* neurons, uint64_t n_units) {
+    uint64_t arg = 0;
+    float max = FLT_MIN;
+
+    for (uint64_t j = 0; j &lt n_units; j++) {
+        const float val = neurons[j];
+        if (val > max) {
+            arg = j;
+            max = val;
+        }
+    }
+
+    return arg;
+}</code></pre></p>
+            </section>
+
+            <section><h4>MNIST example: accuracy</h4>
+            <p><ul><li>The accuracy calculation is very similar to that for the 1NN classifier.</li>
+                   <li>The class label for each image $i$ in the test set is predicted and compared to the known label.</li>
+                   <li>This part uses coarse-grained parallelism on the outer loop with a reduction on the <code>counter</code> variable.</li>
+                   <li>A pure block distribution is sufficient (default) as all regression calls take approximately the same time.</li></ul></p>
+            </section>
+
+            <section><h4>MNIST example: accuracy</h4>
+            <p><pre><code>float accuracy(uint8_t* input, uint8_t* label, float* weights, float* bias,
+                                         uint64_t num_entries, uint64_t num_features, uint64_t num_classes){
+
+    uint64_t counter = 0;
+
+    #pragma omp parallel for reduction(+:counter)
+    for (uint64_t i = 0; i &lt num_entries; i++) {
+
+        float output[num_classes];
+        const uint64_t input_off = i*num_features;
+        const uint64_t label_off = i*num_classes;
+
+        softmax_regression(input+input_off, output, weights, bias, num_features, num_classes);
+
+        counter += argmax(output, num_classes) == argmax(label+label_off, num_classes);
+    }
+
+    return (float)counter/(float)num_entries;
+}</code></pre></p>
+            </section>
+
+            <section><h4>Parameter optimisation: gradient descent</h4>
+            <p><ul><li>The $\hat{y}^{(i)}_j$ are the true labels ("ground truth") and $y^{(i)}_j(\theta)$ are the predicted label vector values.</li>
+                   <li>The agreement between two probability vectors may be calculated using <b>categorical cross-entropy</b>$$H \left( \hat{y}^{(i)},y^{(i)}(\theta) \right) = -\sum_{j=0}^{c-1}\hat{y}^{(i)}_j \cdot \log \left( y^{(i)}_j (\theta) \right) \quad \text{for all} \quad i \in {0,\ldots,m-1}$$</li>
+                   <li>This vanishes for two identical label vectors as $1 \cdot \log 1 = 0$ and $\lim_{\lambda \to 0} \lambda \cdot \log \lambda = 0$.</li></ul></p>
+            </section>
+
+            <section><h4>Parameter optimisation: gradient descent</h4>
+            <p><ul><li>The <b>loss function</b> $L(\theta) = L(W,b)$ measures the accuracy of the model depending on the parameters $\theta = (W,b)$ by averaging the $n$ individual cross-entropy contributions over the input images in the training set: $$L(\theta) = \frac{1}{n}\sum_{i=0}^{n-1} H \left( \hat{y}^{(i)},y^{(i)}(\theta) \right) = -\frac{1}{n}\sum_{i=0}^{n-1}\sum_{j=0}^{c-1} \hat{y}^{(i)}_j \cdot \log \left( y^{(i)}_j (\theta) \right)$$</li>
+                   <li>The goal is to <b>minimise</b> the non-negative loss function as $L(\theta) = 0$ means perfect label agreement.</li>
+                   <li>Note that this kind of problem is generally referred to as <b>optimisation</b> in the computer science/mathematics literature.</li></ul></p>
+            </section>
+
+            <section><h4>Parameter optimisation: gradient descent</h4>
+            <p><ul><li>The optimisation method we choose here is called <b>gradient descent</b>. It is very popular for neural network training.</li>
+                   <li>We update the parameters using the gradient of the loss function, $\theta \to \theta - \epsilon \nabla L(\theta)$, in the hope of reaching the values of $\theta$ that correspond to the (global) minimum of $L(\theta)$.</li>
+                   <li>In practice, this procedure will converge to a local minimum or saddle point for a suitable choice of <b>learning rate</b> $\epsilon > 0$.</li></ul></p>
+            </section>
+
+            <section><h4>Parameter optimisation: gradient descent</h4>
+            <p>The gradients we need are the partial derivatives of the loss function with respect to the parameters: $$\begin{split} \Delta W_{jk} &\equiv \frac{\partial L(W,b)}{\partial W_{jk}} = \frac{1}{n} \sum_{i=0}^{n-1} \left( \text{softmax}(W \cdot x^{(i)}+b)_j - \hat{y}^{(i)}_j \right) \cdot x_k^{(i)} \\ \Delta b_{j} &\equiv \frac{\partial L(W,b)}{\partial b_{j}} = \frac{1}{n} \sum_{i=0}^{n-1} \left( \text{softmax}(W \cdot x^{(i)}+b)_j - \hat{y}^{(i)}_j \right) \end{split}$$</p>
+            </section>
+
+            <section><h4>Parameter optimisation: gradient descent</h4>
+            <p><ul><li>The update procedure is a sum-reduction over the index $i$ (images in the training set).</li>
+                   <li>We start with $\Delta W = \Delta b = 0$ and add the contributions for each image $x^{(i)}$</li>
+                   <li>We then iteratively adjust the weight and bias until convergence: $$W_{jk} \to W_{jk} - \epsilon \Delta W_{jk} \quad \quad b_j \to b_j - \epsilon \Delta b_j$$</li></ul></p>
+            </section>
+
+            <section><h4>Parameter optimisation: gradient descent</h4>
+            <p>Two options for parallelisation:</p>
+            <p><ol><li>Sequentially spawn a team of threads for each of the $c \times d$ elements of $W$, and the $c$ elements of the vector $b$. They subsequently perform a parallel reduction of a single variable over the image index $i$. This would mean creating $c \times (d + 1) \times w$ teams, where $w$ is the number of iterations.</li>
+                   <li>Better approach: create one team of threads, perform $c \times d$ parallel reductions for $W$ and $c$ parallel reductions for $b$ over the image index $i$. This maintains the same team of threads until convergence.</li></ol></p>
+            </section>
+
+            <section><h4>Parameter optimisation: gradient descent</h4>
+            <p><ul><li>OpenMP up to version 4.0 only supports parallel reductions over a few variables. These variables must be known at compile time (specified in <code>reduction</code> clause).</li>
+                   <li>We would need reductions over thousands of variables for option 2.</li>
+                   <li>Variables cannot be enumerated with indices, as required for option 2.</li>
+                   <li>OpenMP v4.5 supports parallel reductions over arrays containing an arbitrary number of reduction variables:</li></ul></p>
+            <p><code>#pragma omp for reduction(operation:array[lower:length])</code></p>
+            <p><ul><li><code>operation</code>: pre-defined or user-defined reduction identifier</li>
+                   <li><code>array</code>: pointer to linear memory</li>
+                   <li><code>lower</code>, <code>length</code>: specify range of indices being privatised during reduction.</li></ul></p>
+            </section>
+
+            <section><h4>Training step</h4>
+            <p><pre><code>void train(uint8_t* input, uint8_t* label, float* weights, float* bias,
+           uint64_t num_entries, uint64_t num_features,
+           uint64_t num_classes, uint64_t num_iters,
+           float epsilon) {
+
+    // allocate memory for the gradients
+    float* grad_bias = malloc(sizeof(float)*num_classes);
+    float* grad_weights = malloc(sizeof(float)*num_features*num_classes);
+
+    // create the team of threads once
+    #pragma omp parallel
+    for (uint64_t iter = 0; iter &lt num_iters; iter++){
+
+        // zero the gradients
+        #pragma omp single
+        for (uint64_t j = 0; j &lt num_classes; j++)
+            grad_bias[j] = 0.0;
+
+        #pragma omp for collapse(2)
+        for (uint64_t j = 0; j &lt num_classes; j++)
+            for (uint64_t k = 0; k &lt num_features; k++)
+                grad_weights[j*num_features+k] = 0.0;
+
+        // compute softmax contributions
+        #pragma omp for \
+            reduction(+:grad_bias[0:num_classes]) \
+            reduction(+:grad_weights[0:num_classes*num_features])
+        for (uint64_t i = 0; i &lt num_entries; i++) {
+
+            const uint64_t inp_off = i*num_features;
+            const uint64_t out_off = i*num_classes;
+
+            float* output = malloc(sizeof(float)*num_classes);
+            softmax_regression(input+inp_off, output, weights, 
+                               bias, num_features, num_classes);
+
+            for (uint64_t j = 0; j &lt num_classes; j++) {
+
+                const uint64_t out_ind = out_off+j;
+                const float lbl_res = output[j]-label[out_ind];
+
+                grad_bias[j] += lbl_res;
+
+                const uint64_t wgt_off = j*num_features;
+                for (uint64_t k = 0; k &lt num_features; k++) {
+
+                    const uint64_t wgt_ind = wgt_off+k;
+                    const uint64_t inp_ind = inp_off+k;
+                    grad_weights[wgt_ind] += lbl_res*input[inp_ind];
+                }
+            }
+            free(output);
+        }
+
+        // adjust bias vector
+        #pragma omp single
+        for (uint64_t j = 0; j &lt num_classes; j++)
+            bias[j] -= epsilon*grad_bias[j]/num_entries;
+
+        // adjust weight matrix
+        #pragma omp for collapse(2)
+        for (uint64_t j = 0; j &lt num_classes; j++)
+            for (uint64_t k = 0; k &lt num_features; k++)
+                weights[j*num_features+k] -= epsilon*
+                   grad_weights[j*num_features+k]/num_entries;
+    }
+
+    free(grad_bias);
+    free(grad_weights);
+}</code></pre></p>
+            <p>Directive <code>single</code> executes subsequent code block on a single thread.</p>
+            </section>
+
+            <section><h3>Main code</h3>
+            <p><pre><code>int read_binary_data(char* filename, bool images, int n_values, 
+                     uint8_t* data) {
+
+   FILE *fptr;
+   int dummy;
+
+   if ((fptr = fopen(filename,"rb")) == NULL){
+       printf("Error! opening file");
+
+       // Program exits if the file pointer returns NULL.
+       exit(1);
+   }
+
+   if (images) {
+       for (int i = 0; i &lt 4; i++) {
+           fread(&dummy, sizeof(dummy), 1, fptr);
+       }
+   } else {
+       for (int i = 0; i &lt 2; i++) {
+           fread(&dummy, sizeof(dummy), 1, fptr);
+       }
+   }
+
+   for (int i = 0; i &lt n_values; i++){
+       fread(&data[i], sizeof(uint8_t), 1, fptr);
+   }
+
+   fclose(fptr);
+
+}
+
+int main() {
+
+    const uint64_t num_features = 28*28;
+    const uint64_t num_classes = 10;
+    const uint64_t num_train = 55000;
+    const uint64_t num_test = 10000;
+
+    uint8_t* train = malloc(sizeof(uint8_t)*num_train*num_features);
+    uint8_t* test = malloc(sizeof(uint8_t)*num_test*num_features);
+
+    uint8_t* train_label = malloc(sizeof(uint8_t)*num_train*num_classes);
+    uint8_t* test_label = malloc(sizeof(uint8_t)*num_test*num_classes);
+
+    float* weights = malloc(sizeof(float)*num_classes*num_features);
+    float* bias = malloc(sizeof(float)*num_classes);
+
+    read_binary_data("train-labels-idx1-ubyte",false,num_train,train_label);
+    read_binary_data("t10k-labels-idx1-ubyte",false,num_test,test_label);
+
+    read_binary_data("train-images-idx3-ubyte",true,num_train,train);
+    read_binary_data("t10k-images-idx3-ubyte",true,num_test,test);
+
+    while(true) { // while loop runs for infinity
+
+        double end_time, start_time, time_spent;
+
+        start_time = omp_get_wtime();
+        train(train, train_label, weights, bias, num_train, num_features, 
+              num_classes);
+        end_time = omp_get_wtime();
+        time_spent = end_time - start_time;
+        printf("Training time: %lf\n",time_spent);
+
+        start_time = omp_get_wtime();
+        float acc = accuracy(test, test_label, weights, bias, num_test, 
+                             num_features, num_classes);
+        end_time = omp_get_wtime();
+        time_spent = end_time - start_time;
+        printf("Accuracy time: %lf\n",time_spent);
+
+        printf("Accuracy: %f\n",acc);
+    }
+}</code></pre></p>
+            <p>Must be compiled with OpenMP v4.5 compliant compiler (GCC 6)</p>
+            </section>
+
+            <section><h3>Parallel reduction</h3>
+            <p>The nature of a reduction process depends on the network topology.</p>
+            <p>Standard example reduces $n = 2^k$ elements in a binary tree of height $k$.</p>
+            <figure><img src="openmp_figs/reduction_diagram.png" width=400><figcaption>Parallel reduction over an array of $8$ elements.</figcaption></figure>
+            </section>
+
+            <section><h4>Parallel reduction</h4>
+            <p>If $\circ$ is a binary operator acting on elements of a set $M$, then $8$ values can be reduced using this operator in a tree topology in the following way:</p>
+            <p>$((a_0 \circ a_1) \circ (a_2 \circ a_3)) \circ ((a_4 \circ a_5) \circ (a_6 \circ a_7))$</p><br>
+            <p>For a linear topology:</p>
+            <p>$(((((((a_0 \circ a_1) \circ a_2) \circ a_3) \circ a_4) \circ a_5) \circ a_6) \circ a_7)$</p>
+            <p>We can guarantee the same result in both topologies if the operator is <b>associative</b>:</p>
+            <p>$(a \circ b) \circ c = a \circ (b \circ c)$ for all $a,b,c \in M$</p>
+            </section>
+
+            <section><h4>Parallel reduction</h4>
+            <p>If the array over which we apply the reduction does not have a length that is a power of $2$, the array is extended to the nearest power of $2$ and the extra values are filled with $e$, where $e$ is the unique neutral element of the binary operator such that $a \circ e = e \circ a = a$ for all $a \in M$.</p>
+            <p>Furthermore, we assume that for any $a,b$ in $M$, $a \circ b = c$ with $c$ again being in the set $M$.</p>
+            <p>This structure of $(M,\circ)$ is called a <b>monoid</b>.</p>
+            <p>Parallel reduction is topology independent when considering monoids.</p>
+            </section>
+
+            <section><h4>Parallel reduction</h4>
+            <p>The set of real numbers with addition $(\mathbb{R},+)$ is a monoid, but the set of <b>double precision floating-point numbers</b> with addition is <b>not</b> a monoid!</p>
+            <p>This is because of the finite precision of these values.</p>
+            <p>In addition, dynamic scheduling in OpenMP reorders the loop iterations, so the reduction should be invariant under permutations of the indices.</p>
+            <p>Therefore, OpenMP exclusively supports parallel reductions over <b>commutative</b> monoids where $a \circ b = b \circ a$.</p>
+            </section>
+
+            <section><h4>Example custom reduction (from Intel C compiler documentation)</h4>
+            <pre><code>#define abs(x)   (x&lt0 ? -x : x)
+#define LARGENUM 2147483647
+#define N        1000000
+int data[N];
+
+// return the smallest magnitude among all the integers in data[N]
+int find_min_abs()
+{
+  int i;
+  int result = LARGENUM;
+
+  #pragma omp declare reduction(minabs : int :              \
+    omp_out = abs(omp_in) > omp_out ? omp_out : abs(omp_in)) \
+    initializer (omp_priv=LARGENUM)
+
+  #pragma omp parallel for reduction(minabs:result)
+  for (i=0; i &lt N; i++) {
+    if (abs(data[i]) &lt result) {
+      result = abs(data[i]);
+    }
+  }
+
+  return result;
+}</code></pre>
+            <p>Syntax: <code>declare reduction</code>(name of the operator : data type : implementation for two values <code>omp_out</code> and <code>omp_in</code> : neutral element definition)</p>
+            </section>
+
+            <section><h3>OpenMP reductions in detail</h3>
+            <p>Let's consider a generic reduction example:</p>
+            <p><pre><code>#pragma omp parallel for reduction(+:x)
+for (int i = 0; i &lt n; i++)
+    x += some_value;</code></pre></p>
+            <p>OpenMP does not actually detect the update step!</p>
+            </section>
+
+            <section><h4>OpenMP reductions in detail</h4>
+            <p>The compiler treats the body of the for-loop in the following way:</p>
+            <p><pre><code>#pragma omp parallel for reduction(+:x)
+for (int i = 0; i &lt n; i++)
+    x = some_expression_involving_x_or_not(x);</code></pre></p>
+            <p>So the update of $x$ may be hidden in a function call.</p>
+            <p>We (the programmers) have to ensure that all updates of $x$ are compatible with the reduction operator.</p>
+            </section>
+
+            <section><h4>OpenMP reductions in detail</h4>
+            <p>Execution flow of a reduction operation:</p>
+            <p><ol><li>Spawn a team of threads and determine the set of iterations for each thread $j$.</li>
+                   <li>Each thread declares a private copy $x_j$ of the variable $x$ initialized with the neutral element $e$.</li>
+                   <li>All threads perform their iterations regardless of how they update the private variable $x_j$.</li>
+                   <li>The result is computed as sequential reduction over the local partial results $x_j$ and the global $x$.</li></ol></p>
+            </section>
+
+            <section><h4>OpenMP reductions in detail</h4>
+            <p>We can check this behaviour with a (useless) example:</p>
+            <p><pre><code>#include&ltstdio.h&gt
+#include&ltstdint.h&gt
+
+int main() {
+
+    uint32_t x = 5;
+
+    #pragma omp parallel for reduction(min:x) num_threads(2)
+    for (uint32_t i = 0; i &lt 10; i++)
+        x += 1;
+
+    printf("x is %d\n",x);
+}</code></pre></p>
+            <p>What is the final value of $x$?</p>
+            </section>
+
+            <section><h4>OpenMP reductions in detail</h4>
+            <p><ol><li>The initial value $x$ is irrelevant because it is modified inside the loop.</li>
+                   <li>There is no schedule specified in the OpenMP pragma so we assume it is <code>static</code>: team of $2$ threads will execute $10/2 = 5$ iterations each.</li>
+                   <li>Each thread initialises their private value of $x$ with the neutral element, which in this case is the largest unsigned integer, $e = 2^{32} - 1$.</li>
+                   <li>Each thread then increments their local value five times, resulting in a value four beyond overflow.</li>
+                   <li>The final value is then the minimum of the two local values ($4$) and the global value ($5$).</li></ol></p>
+            </section>
+
+            <section><h4>OpenMP reductions in detail</h4>
+            <p>We can now see an example of the importance of commutativity of the reduction operator:</p>
+            <p><pre><code>#include &ltiostream&gt
+#include &ltstring&gt
+#include &ltvector&gt
+
+int main(){
+
+    std::string result = {"SIMON SAYS: "};
+    std::vector&ltstd::string&gt data = {"p","a","r","a","l","l","e","l"," ","p","r","o","g","r","a","m","m","i","n","g"," ","i","s"," ","f","u","n","!"};
+
+    #pragma omp declare reduction(op : std::string : omp_out = omp_out+omp_in) initializer (omp_priv=std::string(""))
+    
+    #pragma omp parallel for reduction(op:result) num_threads(4)
+    for (int i = 0; i &lt data.size(); i++)
+        result = result+data[i];
+
+    std::cout &lt&lt result &lt&lt std::endl;
+
+}</code></pre>
+            </section>
+
+            <section><h4>OpenMP reductions in detail</h4>
+            <p>It is dangerous to remove implicit barriers after loops using the <code>nowait</code> option with a reduction, as the final value must be written back to the global variable.</p>
+            <p><pre><code>#include &ltstdio.h&gt
+
+int main() {
+
+    int x = 0;
+    #pragma omp parallel
+    {
+        #pragma omp for reduction(+:x) nowait
+        for (int i = 0; i &lt 1024; i++)
+            x += 1;
+
+        #pragma omp barrier
+        printf("x is %d\n",x);
+    }
+}</code></pre></p>
+            </section>
+
+            <section><h3>SIMD vectorization (vector addition)</h3>
+            <p>Auto-vectorization by compilers is usually suboptimal.</p>
+            <p>OpenMP v4.0 provides support for directives that help the compiler spot vectorisation patterns.</p>
+            <p>We can reuse the vector addition example we saw earlier (listing 6.3), adding vectorisation.</p>
+            </section>
+
+            <section><h4>SIMD vectorization (vector addition)</h4>
+            <p><pre><code>#include &ltstdio.h&gt
+#include &ltstdlib.h&gt
+#include &ltomp.h&gt
+
+#define num_entries 100000000
+
+int x[num_entries];
+int y[num_entries];
+int z[num_entries];
+
+int main() {
+
+    double end_time, start_time, time_spent;
+
+    #pragma omp parallel for
+    for (int i = 0; i &lt num_entries; i++) {
+        x[i] = i;
+        y[i] = num_entries - i;
+    }
+
+    // sequential
+    start_time = omp_get_wtime();
+    for  (int i = 0; i &lt num_entries; i++) {
+        z[i] = x[i] + y[i];
+    }
+    end_time = omp_get_wtime();
+    time_spent = end_time - start_time;
+    printf("Time in serial sum: %lf\n",time_spent);
+
+    // OpenMP vectorised
+    start_time = omp_get_wtime();
+    #pragma omp simd
+    for  (int i = 0; i &lt num_entries; i++) {
+        z[i] = x[i] + y[i];
+    }
+    end_time = omp_get_wtime();
+    time_spent = end_time - start_time;
+    printf("Time in vectorised sum: %lf\n",time_spent);
+
+    // OpenMP parallelised
+    start_time = omp_get_wtime();
+    #pragma omp parallel for
+    for (int i = 0; i &lt num_entries; i++) {
+        z[i] = x[i] + y[i];
+    }
+    end_time = omp_get_wtime();
+    time_spent = end_time - start_time;
+    printf("Time in parallel sum: %lf\n",time_spent);
+
+    // OpenMP vectorised+parallelised
+    start_time = omp_get_wtime();
+    #pragma omp parallel for simd
+    for (int i = 0; i &lt num_entries; i++) {
+        z[i] = x[i] + y[i];
+    }
+    end_time = omp_get_wtime();
+    time_spent = end_time - start_time;
+    printf("Time in vectorised parallel sum: %lf\n",time_spent);
+
+    #pragma omp parallel for
+    for (int i = 0; i &lt num_entries; i++)
+        if (z[i] - num_entries)
+            printf("error at position %d",i);
+
+}</code></pre></p>
+            </section>
+
+            <section><h4>SIMD vectorization - data dependencies</h4>
+            <p>Vectorisation often works more effectively than other techniques when there are data dependencies.</p>
+            <p>This works if the distance between dependent elements of the array is <b>larger</b> than the chunk size of the vector operation.</p>
+            <p><pre><code>for (i = 10; i &lt N; ++i)
+    a[i] = a[i-10] + b;</code></pre></p><p>This has a dependency span of 10 and can be vectorised for vector instructions of sizes 2, 4 or 8, but not for sizes 12 or larger. This can be controlled with the <code>safelen</code> option:</p>
+            <p><pre><code>#pragma omp simd safelen(10)
+for (i = 10; i &lt N; ++i)
+    a[i] = a[i-10] + b;</code></pre></p>
+            </section>
+
+            <section><h4>SIMD vectorization - vectorisation-aware functions</h4>
+            <p>OpenMP can vectorise functions. We can create different versions of the functions for different vector instruction sizes.</p>
+            <p><pre><code>#pragma omp declare simd
+int addition(int a, int b) {
+    return a + b;
+}</code></pre></p><p>The compiled function then accepts vector registers, instead of just scalars. This can be called within a SIMD loop and will benefit from the vector instructions.</p>
+            <p><pre><code>#pragma omp simd
+for (i = 0; i &lt N; ++i) {
+    c[i] = addition(a[i], b[i]);
+}</code></pre></p>
+            </section>
+
+            <section><h3>Other options available in OpenMP</h3>
+            <p><ul><li>Sections: split code into blocks that are each executed on one thread in the current team.</li>
+                   <li>Tasks: implement task parallelism using OpenMP.</li></ul></p>
+            </section>
+
+			</div>
+		</div>
+
+<script>
+
+require(
+    {
+      // it makes sense to wait a little bit when you are loading
+      // reveal from a cdn in a slow connection environment
+      waitSeconds: 15
+    },
+    [
+      "https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/lib/js/head.min.js",
+      "https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/js/reveal.js"
+    ],
+
+    function(head, Reveal){
+
+        // Full list of configuration options available here: https://github.com/hakimel/reveal.js#configuration
+        Reveal.initialize({
+            controls: true,
+            progress: true,
+            history: true,
+
+            transition: "slide",
+
+            // Optional libraries used to extend on reveal.js
+            dependencies: [
+                { src: "https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/plugin/highlight/highlight.js" }
+            ]
+        });
+
+        var update = function(event){
+          if(MathJax.Hub.getAllJax(Reveal.getCurrentSlide())){
+            MathJax.Hub.Rerender(Reveal.getCurrentSlide());
+          }
+        };
+
+        Reveal.addEventListener('slidechanged', update);
+
+        function setScrollingSlide() {
+            var scroll = false
+            if (scroll === true) {
+              var h = $('.reveal').height() * 0.95;
+              $('section.present').find('section')
+                .filter(function() {
+                  return $(this).height() > h;
+                })
+                .css('height', 'calc(95vh)')
+                .css('overflow-y', 'scroll')
+                .css('margin-top', '20px');
+            }
+        }
+
+        // check and set the scrolling slide every time the slide change
+        Reveal.addEventListener('slidechanged', setScrollingSlide);
+
+    }
+
+);
+</script>
+	</body>
+</html>
