@@ -1,0 +1,1509 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="X-UA-Compatible" content="chrome=1" />
+
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+
+<title>MPI</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+<!-- General and theme style sheets -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/css/reveal.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/css/theme/white.css" id="theme">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/lib/css/zenburn.css">
+
+<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+<script>
+if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = 'https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/css/print/pdf.css';
+        document.getElementsByTagName( 'head' )[0].appendChild( link );
+}
+
+</script>
+
+<!--[if lt IE 9]>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/lib/js/html5shiv.js"></script>
+<![endif]-->
+
+<!-- Loading the mathjax macro -->
+<!-- Load mathjax -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS_HTML"></script>
+    <!-- MathJax configuration -->
+    <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+            displayMath: [ ['$$','$$'], ["\\[","\\]"] ],
+            processEscapes: true,
+            processEnvironments: true
+        },
+        // Center justify equations in code and markdown cells. Elsewhere
+        // we use CSS to left justify single line equations in code cells.
+        displayAlign: 'center',
+        "HTML-CSS": {
+            styles: {'.MathJax_Display': {"margin": 0}},
+            linebreaks: { automatic: false }
+        }
+    });
+    </script>
+    <!-- End of mathjax configuration -->
+
+<!-- Get Font-awesome from cdn -->
+<!--<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.css">-->
+
+
+        <style type="text/css">
+            .container{
+                        display: flex;
+                      }
+            .col{
+                      flex: 1;
+                }
+            .reveal section p {
+                      display: inline-block;
+                      font-size: 0.6em;
+                      line-height: 1.2em;
+                      vertical-align: top;
+                      text-align: left;
+            }
+            .reveal section li {
+                      font-size: 0.6em;
+            }
+            .reveal section td {
+                      font-size: 0.6em;
+            }
+            .reveal section img {
+                      border: none;
+            }
+        </style>
+
+	</head>
+	<body>
+			<div class="reveal">
+			<div class="slides">
+
+                <section><h1>MPI</h1>
+                </section>
+
+				<section><h3>Introduction</h3>
+                <div class="container">
+                <div class="col">
+                <p>MPI is the <i>de facto</i> industry standard message passing specification.</p>
+                <p>MPI libraries for C/C++/Fortran include open-source versions (MPICH, OpenMPI) and commercial versions from Intel, IBM, HP, etc.</p>
+                <p>MPI was originally developed for distributed memory machines.</p>
+                <p>Traditional use is illustrated in the figure. One process per core, communication between processes handled by <i>send</i> and <i>receive</i> routines.</p>
+                </div>
+                <div class="col">
+                <p><img src="mpi_figs/fig9_1.png"></p>
+                </div>
+                </div>
+                </section>
+
+                <section><h4>Introduction</h4>
+                <p>Modern supercomputers have hybrid distributed/shared memory (multiple cores on one node)</p>
+                <p>MPI processes call multithread or GPU-accelerated code</p>
+                <p><img src="mpi_figs/fig9_2.png"></p>
+                </section>
+
+                <section><h4>Introduction</h4>
+                <p>Compiling code depends on implementation.</p>
+                <p>In OpenMPI we use <code>mpicc</code> to compile C code with MPI.</p>
+                <p>The code is then run using <code>mpirun</code> with the flag <code>-np</code> to specify the number of processes.</p>
+                <p>Processes are mapped to nodes as specified by the user in a configuration file.</p>
+                <p>If any process fails, the whole application stops early.</p>
+                </section>
+
+                <section><h3>Basic concepts (Hello World)</h3>
+                <p><pre><code>#include "mpi.h"
+#include&ltstdio.h&gt
+
+int main (int argc, char *argv[]){
+    // Initialize MPI
+    MPI_Init(NULL, NULL);
+
+    // Get number of processes
+    int numP;
+    MPI_Comm_size(MPI_COMM_WORLD, &numP);
+
+    // Get rank of process
+    int myId;
+    MPI_Comm_rank(MPI_COMM_WORLD, &myId);
+
+    // Every process prints Hello
+    printf("Process %d of %d: Hello World!\n",myId,numP);
+
+    MPI_Finalize();
+}</code></pre></p>
+                </section>
+
+                <section><h4>Basic concepts (Hello World)</h4>
+                <p><ul><li>Header <code>mpi.h</code> required for MPI function definitions.</li>
+                       <li>All processes are independent until <code>MPI_Init</code> is called.</li>
+                       <li>From this point processes can collaborate, send/receive messages, synchronise, until <code>MPI_Finalize</code> is called.</ul></p>
+                </section>
+
+                <section><h4>Basic concepts (Hello World)</h4>
+                <p><b>Communicator:</b> collection of processes which may communicate with each other. The total number of processes in a communicator is found using <code>MPI_Comm_size</code></p>
+                <p><b>Rank:</b> each process within a communicator has a unique ID number known as its <i>rank</i> (0, 1, 2, etc.)</p>
+                </section>
+
+                <section><h3>Point-to-Point communication (ping-pong)</h3>
+                <p>Traditional MPI communication style is two-sided, source and destination processes must be synchronised with <i>send</i> and <i>receive</i> functions.</p>
+                <p>We use a <i>ping-pong</i> between pairs of processes to introduce point-to-point communication.</p>
+                <p>We partition an even number of processes into pairs (shown in figure), (0,1), (2,3), (4,5), etc.</p>
+                <p>The computation starts from the left process of the pair sending a message (ping) to the right process.</p>
+                <p>The right process then returns a pong when it receives the ping.</p>
+                <p>The messages are integers representing the current iteration number.</p>
+                </section>
+
+                <section><h3>Point-to-Point communication (ping-pong)</h3>
+                <p><img src="mpi_figs/fig9_3.png"></p>
+                </section>
+
+                <section><h4>Point-to-Point communication (ping-pong)</h4>
+                <p><pre><code>#include &ltstdio.h&gt
+#include &ltstdlib.h&gt
+#include &ltstdbool.h&gt
+#include "mpi.h"
+
+int main (int argc, char *argv[]){
+    // Initialise MPI
+    MPI_Init(NULL, NULL);
+
+    // Get the number of processes
+    int numP;
+    MPI_Comm_size(MPI_COMM_WORLD, &numP);
+
+    // Get the ID of the process
+    int myID;
+    MPI_Comm_rank(MPI_COMM_WORLD, &myID);
+
+    if (argc &lt 2){
+        // Only the first process prints this message
+        if (myID == 0){
+            printf("The program should be called as ./mpi_ping_pong num_ping_pong\n");        
+            MPI_Abort(MPI_COMM_WORLD, 1);
+        }
+    }
+
+    if ((numP % 2) != 0){
+        // Only the first process prints this message
+        if (myID == 0){
+            printf("The number of processes must be a multiple of 2\n");
+            MPI_Abort(MPI_COMM_WORLD, 1);
+        }
+    }
+
+    int num_ping_pong = atoi(argv[1]);
+    int ping_pong_count = 0;
+
+    int partner_id;
+    bool odd = myID % 2;
+
+    if (odd){
+        partner_id = myID-1;
+    } else {
+        partner_id = myID+1;
+    }
+
+    while (ping_pong_count &lt num_ping_pong){
+        // First receive the ping and then pong
+        ping_pong_count++;
+
+        if (odd){
+            MPI_Recv(&ping_pong_count, 1, MPI_INT, partner_id, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            MPI_Send(&ping_pong_count, 1, MPI_INT, partner_id, 0, MPI_COMM_WORLD);
+        } else {
+            MPI_Send(&ping_pong_count, 1, MPI_INT, partner_id, 0, MPI_COMM_WORLD);
+            MPI_Recv(&ping_pong_count, 1, MPI_INT, partner_id, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);  
+        }
+
+    }
+
+    MPI_Finalize();
+}</code></pre></p>
+                </section>
+
+                <section><h3>Non-blocking communication (ping-pong in a ring)</h3>
+                <p><ul><li><code>Send</code> and <code>Recv</code> correspond to <b>blocking</b> communication: the communication must complete before the code continues.</li>
+                       <li><code>Recv</code>: returns only after the receive buffer contains the newly received message.</li>
+                       <li><code>Send</code>: routine blocks until the message is sent to the destination.</li></ul></p>
+                </section>
+
+                <section><h4>Non-blocking communication (ping-pong in a ring)</h4>
+                <p>Blocking communication may lead to deadlocks: a condition when two or more processes are waiting for the other to release a resource.</p>
+                <p>This is illustrated in the following code, where the ping-pong processes are arranged in a ring.</p>
+                <p><img src="mpi_figs/fig9_4.png"></p>
+                </section>
+
+                <section><h4>Non-blocking communication (ping-pong in a ring)</h4>
+                <p><pre><code>#include &ltstdlib.h&gt
+#include &ltstdio.h&gt
+#include "mpi.h"
+
+int main (int argc, char *argv[]){
+    // Initialize MPI
+    MPI_Init(&argc, &argv);
+
+    // Get number of processes
+    int numP;
+    MPI_Comm_size(MPI_COMM_WORLD, &numP);
+
+    // Get ID of process
+    int myID;
+    MPI_Comm_rank(MPI_COMM_WORLD, &myID);
+
+    if(argc &lt 2){
+        // Only first process prints message
+        printf("Program is run as: ./mpi_ping_pong_ring num_ping_pong\n");
+        MPI_Abort(MPI_COMM_WORLD, 1);
+    }
+
+    int num_ping_pong = atoi(argv[1]);
+    int ping_pong_count = 0;
+    int next_id = myID+1, prev_id = myID - 1;
+
+    if (next_id &gt= numP) next_id = 0;
+    if (prev_id &lt 0) prev_id = numP - 1;
+
+    while(ping_pong_count &lt num_ping_pong){
+        ping_pong_count++;
+
+        // Send the ping
+        MPI_Send(&ping_pong_count, 1, MPI_INT, next_id, 0, MPI_COMM_WORLD);
+
+        // Wait and receive the ping
+        MPI_Recv(&ping_pong_count, 1, MPI_INT, prev_id, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
+        // Send the pong
+        MPI_Send(&ping_pong_count, 1, MPI_INT, next_id, 0, MPI_COMM_WORLD);
+
+        // Wait and receive the pong
+        MPI_Recv(&ping_pong_count, 1, MPI_INT, prev_id, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    }
+
+    // Terminate MPI
+    MPI_Finalize();
+}</code></pre></p>
+                </section>
+
+                <section><h4>Non-blocking communication (ping-pong in a ring)</h4>
+                <p><ul><li>This is a circular chain of <code>Send</code> calls.</li>
+                       <li>Often this code will not actually deadlock.</li>
+                       <li>Although <code>Send</code> is a blocking call, this is only until the network can buffer the message.</li>
+                       <li>If the network cannot buffer the messages, the <code>Send</code> calls block until a matching receive has been posted.</li>
+                       <li>In this code the messages are so small that they will be buffered, but larger messages will deadlock as the network cannot buffer them.</li></ul></p>
+                </section>
+
+                <section><h4>Non-blocking communication (ping-pong in a ring)</h4>
+                <p>Non-blocking communication calls:</p>
+                <p><code>MPI_Isend(const void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, MPI_Request *request)</code></p>
+                <p><code>MPI_Irecv(void *buf, int count, MPI_Datatype datatype, int source, int tag, MPI_Comm comm, MPI_Request *request)</code></p>
+                <p>These calls do not return any status information. We can synchronise and query non-blocking calls using <code>MPI_Wait</code> and <code>MPI_Test</code>.</p>
+                </section>
+
+                <section><h4>Non-blocking communication (ping-pong in a ring)</h4>
+                <p>Code with non-blocking calls:</p>
+                <p><pre><code>#include &ltstdlib.h&gt
+#include &ltstdio.h&gt
+#include "mpi.h"
+
+int main (int argc, char *argv[]){
+
+    MPI_Request request;
+
+    // Initialize MPI
+    MPI_Init(&argc, &argv);
+
+    // Get number of processes
+    int numP;
+    MPI_Comm_size(MPI_COMM_WORLD, &numP);
+
+    // Get ID of process
+    int myID;
+    MPI_Comm_rank(MPI_COMM_WORLD, &myID);
+
+    if(argc &lt 2){
+        // Only first process prints message
+        printf("Program is run as: ./mpi_ping_pong_ring num_ping_pong\n");
+        MPI_Abort(MPI_COMM_WORLD, 1);
+    }
+
+    int num_ping_pong = atoi(argv[1]);
+    int ping_pong_count = 0;
+    int next_id = myID+1, prev_id = myID - 1;
+
+    if (next_id &gt= numP) next_id = 0;
+    if (prev_id &lt 0) prev_id = numP - 1;
+
+    while(ping_pong_count &lt num_ping_pong){
+        ping_pong_count++;
+
+        // Send the ping
+        MPI_Isend(&ping_pong_count, 1, MPI_INT, next_id, 0, MPI_COMM_WORLD, &request);
+
+        // Wait and receive the ping
+        MPI_Irecv(&ping_pong_count, 1, MPI_INT, prev_id, 0, MPI_COMM_WORLD, &request);
+
+        // Send the pong
+        MPI_Isend(&ping_pong_count, 1, MPI_INT, next_id, 0, MPI_COMM_WORLD, &request);
+
+        // Wait and receive the pong
+        MPI_Irecv(&ping_pong_count, 1, MPI_INT, prev_id, 0, MPI_COMM_WORLD, &request);
+    }
+
+    // Terminate MPI
+    MPI_Finalize();
+}</pre></code></p>
+                </section>
+
+                <section><h4>Non-blocking communication (ping-pong in a ring)</h4>
+                <p>The deadlocks can be solved using only <code>Isend</code></p>
+                <p>Non-blocking communication is usually employed to overlap computation and communication (we will see this later).</p>
+                </section>
+
+                <section><h3>Collectives (counting primes)</h3>
+                <p>MPI includes communication routines for all the processes in a communicator: collectives.</p>
+                <p><ul><li>Reduction of programming effort: reduce need to create communication pattern.</li>
+                       <li>Optimised performance: implementations of collectives are usually efficient, may be optimised for specific architectures.</li></ul></p>
+                </section>
+
+                <section><h4>Collectives (counting primes)</h4>
+                <p>We illustrate collectives using a code to determine the number of primes between $0$ and $n$, where $n$ is given by the user.</p>
+                <p>A simple prime search (sequential) is given below.</p>
+                <p><pre><code>int totalPrimes = 0;
+bool prime;
+for (int i = 2; i &lt= n; i++){
+    prime = true;
+    for (int j = 2; j &lt i; j++){
+        if ((i%j) == 0){
+            prime = false;
+            break;
+        }
+    }
+    totalPrimes += prime;
+}</pre></code></p>
+                </section>
+
+                <section><h4>Collectives (counting primes)</h4>
+                <p>Outer loop iterates over all numbers from $2$ to $n$.</p>
+                <p>Inner loop then checks each number up to current number $i$ to determine if $i$ is a multiple of $j$.</p>
+                <p>If a multiple is found the inner loop is immediately terminated (number $i$ is not prime), otherwise <code>totalPrimes</code> is incremented by one.</p>
+                </section>
+
+                <section><h4>Collectives (counting primes)</h4>
+                <p>The MPI version uses process 0 to read value of $n$ from input.</p>
+                <p>This is then sent to all other processes (artificial example: all processes can access the parameters of an MPI program).</p>
+                <p><pre><code>#include &ltstdlib.h&gt
+#include &ltstdio.h&gt
+#include &ltstdbool.h&gt
+#include "mpi.h"
+
+int main (int argc, char *argv[]){
+    // Initialise MPI
+    MPI_Init(&argc, &argv);
+
+    // Get number of processes
+    int numP;
+    MPI_Comm_size(MPI_COMM_WORLD, &numP);
+
+    // Get ID of process
+    int myID;
+    MPI_Comm_rank(MPI_COMM_WORLD, &myID);
+
+    if (argc &lt 2){
+        // Only first process prints this message
+        if (myID == 0){
+            printf("Call code in this way: ./mpi_count_primes n\n");
+            MPI_Abort(MPI_COMM_WORLD, 1);
+        }
+    }
+
+    int n;
+    if (myID == 0){
+        n = atoi(argv[1]);
+    }
+
+    // Barrier to synchronise processes before measuring time
+    MPI_Barrier(MPI_COMM_WORLD);
+    
+
+    // Get current time
+    double start = MPI_Wtime();</code></pre></p>
+                </section>
+
+                <section><h4>Collectives (counting primes)</h4>
+                <p><ul><li><code>MPI_Wtime</code>: determines current time (returns a double).</li>
+                       <li><code>MPI_Barrier</code>: simplest collective in MPI that synchronises processes within a communicator - no process can continue until all have reached the barrier.</li></ul></p>
+                <p>The barrier is used to ensure all processes start counting execution time from the same moment.</p>
+                <p>After initilising the timer, we <b>broadcast</b> the value of $n$ to all processes from process 0.</p>
+                </section>
+
+                <section><h4>Collectives (counting primes)</h4>
+                <p>We can use point-to-point communication:</p>
+                <p><pre><code>if (myID == 0){
+    for (i = 1; i &lt numP; i++){
+        MPI_Send(&n, 1, MPI_INT, i, 0, MPI_COMM_WORLD);
+} else {
+    MPI_Recv(&n, 1, MPI_INT, i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+}</code></pre></p>
+                </section>
+
+                <section><h4>Collectives (counting primes)</h4>
+                <p>Better (and easier) method is to use the <code>Bcast</code> function in MPI.</p>
+                <p>Syntax: <code>int MPI_Bcast(void *buffer, int count, MPI_Datatype datatype, int root, MPI_Comm comm)</code></p>
+                <p><code>root</code> specifies which process is broadcasting the data.</p>
+                <p>All processes call the same function, but it acts differently when called by the broadcasting process and when called by a receiving process.</p>
+                <p>If a receiver process does not participate in the broadcast (by explicitly coding it that way) then there is a deadlock.</p>
+                </section>
+
+                <section><h4>Collectives (counting primes)</h4>
+                <p><img src="mpi_figs/fig9_5.png"></p>
+                </section>
+
+                <section><h4>Collectives (counting primes)</h4>
+                <p><pre><code>// Send value of n to all processes
+MPI_Bcast(&n, 1, MPI_INT, 0, MPI_COMM_WORLD);
+
+if (n &lt 1){
+    // Only first process prints message
+    if (myID == 0){
+        printf("Parameter n must be higher than 0");
+        MPI_Abort(MPI_COMM_WORLD, 1);
+    }
+}</code></pre></p>
+                </section>
+
+                <section><h4>Collectives (counting primes)</h4>
+                <p>With $n$ available to all processes, we start counting primes.</p>
+                <p>The work is divided by cyclically distributing the index $i$ across processes.</p>
+                <p><pre><code>// Perform computation of prime counting
+// between 0 and n in parallel
+int myCount = 0;
+int total;
+bool prime;
+
+// Each process analyses a range of numbers within 0 to n
+// Distribution of values is cyclic to obtain better load balancing
+for (int i = 2 + myID; i &lt= n; i=i+numP){
+    prime = true;
+    for (int j = 2; j &lt i; j++){
+        if ((i%j) == 0){
+            prime = false;
+            break;
+        }
+    }
+    myCount += prime;
+}</code></pre></p>
+                </section>
+
+                <section><h4>Collectives (counting primes)</h4>
+                <p>Each process has its own value of <code>myCount</code>.</p>
+                <p>The total number of primes is the sum of all the <code>myCount</code> values.</p>
+                <p>We can perform this summation by sending all <code>myCount</code> values from all processes to process 0, and then summing sequentially.</p>
+                </section>
+
+                <section><h4>Collectives (counting primes)</h4>
+                <p><pre><code>if (myID == 0){
+    total = myCount;
+    for (int i = 1; i &lt numP; i++){
+        MPI_Recv(&myCount, 1, MPI_INT, i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        total += myCount;
+    }
+} else {
+    MPI_Send(&myCount, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
+}</code></pre></p>
+                </section>
+
+                <section><h4>Collectives (counting primes)</h4>
+                <p>The previous code works, but is inefficient, using point-to-point communication.</p>
+                <p>The code on process 0 requires that the messages are received <b>in order</b>.</p>
+                <p>If process 2 sends its message slightly earlier than process 1, that <code>myCount</code> value will be held in the buffer until the value from process 1 is added.</p>
+                </section>
+
+                <section><h4>Collectives (counting primes)</h4>
+                <p>Out of order updates...</p>
+                <p><pre><code>MPI_Status status;
+if (myID == 0){
+    total = myCount;
+    for (int i = 1; i &lt numP; i++){
+        MPI_Recv(&myCount, 1, MPI_INT, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, status);
+        total += myCount;
+    }
+} else {
+    MPI_Send(&myCount, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
+}</code></pre></p>
+                </section>
+
+                <section><h4>Collectives (counting primes)</h4>
+                <p>Specifying <code>MPI_ANY_SOURCE</code> in the <code>root</code> value allows process 0 to update <code>total</code> when <b>any</b> message arrives.</p>
+                <p><code>MPI_ANY_TAG</code> provides a similar functionality for the <code>tag</code> parameter.</p>
+                <p>We specify an MPI_Status variable in <code>Recv</code> to be able to query the state of the message.</p>
+                </section>
+
+                <section><h4>Collectives (counting primes)</h4>
+                <p>What we are doing here is a <b>reduction</b>.</p>
+                <p>In MPI:</p>
+                <p><code>int MPI_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, int root, MPI_Comm comm)</code></p>
+                <p>The argument <code>op</code> represents the operator being used in the reduction.</p>
+                <p>Addition is specified with <code>MPI_SUM</code> but others available are product, logical and/or, min/max, etc.</p>
+                <p>We can also define custom (associative) operations.</p>
+                </section>
+
+                <section><h4>Collectives (counting primes)</h4>
+                <p><img src="mpi_figs/fig9_6.png"></p>
+                </section>
+
+                <section><h4>Collectives (counting primes)</h4>
+                <p><ol><li>Specify the collective for reduction</li>
+                       <li>Measure the final time</li>
+                       <li>Print out the result</li>
+                       <li>Finalise MPI</li></ol></p>
+                </section>
+
+                <section><h4>Collectives (counting primes)</h4>
+                <p><pre><code>// Reduce the partial counts into 'total' in process 0
+MPI_Reduce(&myCount, &total, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+
+// Measure the current time
+double end = MPI_Wtime();
+
+if (myID == 0){
+    printf("%d primes between 1 and %n\n",total,n);
+    printf("Time with %d processes: %f seconds.\n",numP,end-start);
+}
+
+// Terminate MPI
+MPI_Finalize();</code></pre></p>
+                </section>
+
+                <section><h4>Collectives (counting primes)</h4>
+                <p>We used 3 common blocking collectives: <code>Barrier</code>, <code>Bcast</code>, <code>Reduce</code>.</p>
+                <p><ul><li><code>Allreduce</code>: combination of reduction and broadcast so that the output is available for all processes.</li>
+                       <li><code>Scatter</code>: split a block of data available in a root process and send different fragments to each process.</li>
+                       <li><code>Gather</code>: send data from different processes and aggregate in a root process.</li>
+                       <li><code>Allgather</code>: similar to <code>Gather</code> but output is aggregated in buffers of all processes.</li>
+                       <li><code>Alltoall</code>: all processes scatter data to all processes.</li></ul></p>
+                <p>There are variants of these for non-blocking communications and variable block size per process.</p>
+                </section>
+
+                <section><h3>Overlapping computation and communication (Jacobi iteration)</h3>
+                <p>Common scientific computing task: iterative method to find steady-state solution of Poisson equation $\nabla^2 \phi = f$ on the rectangular domain $\Omega$ with Dirichlet boundary conditions $\phi(p) = g(p)$ for all points $p$ on the boundary $\partial \Omega$.</p>
+                <p>The Laplacian $\nabla^2$ in Cartesian coordinates is</p>
+                <p>$\nabla^2 = \sum_{k=0}^{d-1} \frac{\partial^2}{\partial x_0^2} + \cdots + \frac{\partial^2}{\partial x_{d-1}^2}$</p>
+                <p>This measures, locally, the curvature of a real-valued function $\phi$ defined on a $d$-dimensional domain.</p>
+                </section>
+
+                <section><h4>Jacobi iteration</h4>
+                <p>Numerically, we substitute $\nabla^2$ for a matrix $A$ and the functions $\phi$ and $f$ for vectors $x$ and $b$, equation becomes $A \cdot x = b$.</p>
+                <p>The algorithm we will use is within a class known as <em>stencil codes</em> or <em>tensor convolution algorithms.</em></p>
+                <p>Main idea is to iteratively apply a small-sized mask (stencil) to matrices or higher dimensional arrays (tensors).</p>
+                <p>We restrict to $d = 2$, so $\phi$ is a 2d matrix, and we set $f = 0$ (Laplace equation).</p>
+                </section>
+
+                <section><h4>Jacobi iteration</h4>
+                <p>Second order centered finite difference approximation: $f''(x) = \frac{f(x+h) - 2f(x) + f(x-h)}{h^2}$</p>
+                <p>Use this for the Laplacian:</p>
+                <p>$\nabla^2 \phi (x,y) = 0 \approx \frac{\phi(x+h,y)+\phi(x-h,y)+\phi(x,y+h)+\phi(x,y-h)-4\phi(x,y)}{h^2} = 0$</p>
+                <p>We can solve iteratively for $\phi(x,y)$.</p>
+                </section>
+
+                <section><h4>Jacobi iteration</h4>
+                <p>We set $h = 1$ (unit step size). The discretised update rule is then:</p>
+                <p>$$\text{data}[i,j] \leftarrow \frac{\text{data}[i+1,j]+\text{data}[i-1,j]+\text{data}[i,j+1]+\text{data}[i,j-1]}{4}$$</p>
+                <p>Each grid point can be updated independently, and we often need a very large number of grid points to approximate the continuous domain: algorithm is often parallelised.</p>
+                <p>This method is called <b>Jacobi iteration</b>.</p>
+                </section>
+
+                <section><h4>Jacobi iteration</h4>
+                <p><img src="mpi_figs/fig9_7.png" width=500></p>
+                </section>
+
+                <section><h4>Jacobi iteration</h4>
+                <p>Example sequential code</p>
+                <p><pre><code>for (int i=1; i &lt rows-1; i++){
+    for (int j=1; j &lt cols-1; j++){
+        buff[i*cols+j] = 0.25f*(data[(i+1)*cols+j]+data[i*cols+j-1]+data[i*cols+j+1]+data[(i-1)*cols+j]);
+    }
+}
+// better to use swapped pointers here...
+memcpy(data, buff, rows*cols*sizeof(float));</pre></code></p>
+                </section>
+
+                <section><h4>Jacobi iteration</h4>
+                <p>We need to determine if the algorithm is converging.</p>
+                <p>One method is to simply determine the squared residual between each iteration: $\sum (\phi^{n+1} - \phi^n)^2$ where the sum is over all points in the domain and $n$ indicates the iteration number.</p>
+                <p>This does NOT guarantee that we are converging to the solution!</p>
+                </section>
+
+                <section><h4>Jacobi iteration</h4>
+                <p><pre><code>float error = 0.0;
+for (int i=1; i &lt rows-1; i++){
+    for (int j=1; j &lt cols-1; j++){
+        error += (data[i*cols+j]-buff[i*cols+j])*(data[i*cols+j]-buff[i*cols+j]);</pre></code></p>
+                </section>
+
+                <section><h4>Jacobi iteration</h4>
+                <p>Parallelised code uses a 1D block distribution.</p>
+                <img src="mpi_figs/fig9_8.png">
+                </section>
+
+                <section><h4>Jacobi iteration</h4>
+                <p>First part of code:</p>
+                <pre><code>#include &ltstdio.h&gt
+#include &ltstdlib.h&gt
+#include "mpi.h"
+
+int main (int argc, char *argv[]){
+    // Initialise MPI
+    MPI_Init(&argc, &argv);
+
+    // Get number of processes
+    int numP;
+    MPI_Comm_size(MPI_COMM_WORLD, &numP);
+
+    // Get ID of process
+    int myID;
+    MPI_Comm_rank(MPI_COMM_WORLD, &myID);
+
+    if(argc &lt 4){
+        // Only first process prints message
+        if(myID == 0){
+            printf("Program should be called as ./jacobi rows cols errThreshold\n");
+            MPI_Abort(MPI_COMM_WORLD, 1);
+        }
+    }
+
+    int rows = atoi(argv[1]);
+    int cols = atoi(argv[2]);
+    float errThres = atof(argv[3]);
+
+    if ((rows &lt 1) || (cols &lt 1)){
+        // First process prints message
+        if(myID == 0){
+            printf("Number of rows and columns must be greater than 0.\n");
+            MPI_Abort(MPI_COMM_WORLD,1);
+        }
+    }
+
+    if(rows%numP){
+        // First process prints message
+        if(myID == 0){
+            printf("Number of rows must be a multiple of number of processes.\n");
+            MPI_Abort(MPI_COMM_WORLD,1);
+        }
+    }
+
+    float *data;
+
+    if(myID == 0){
+        data = (float*) malloc( rows*cols*sizeof(float));
+        readInput(rows, cols, data);
+    }</pre></code></p>
+                </section>
+
+                <section><h4>Jacobi iteration</h4>
+                <p>Now we need to distribute the data matrix across the processes.</p>
+                <p>We use the collective <code>Scatter()</code></p>
+                <p><code>int MPI_Scatter(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPI_Comm comm)</code></p>
+                </section>
+
+                <section><h4>Scatter</h4>
+                <p><code>int MPI_Scatter(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPI_Comm comm)</code></p>
+                <p>We need to specify the root process (the one doing the scattering) and 3 more arguments for the senders/receivers:</p>
+                <p><ul><li>Buffer for the data</li>
+                       <li>Datatype</li>
+                       <li>Number of elements</li></ul></p>
+                <p><code>sendcount</code> is the number of elements received, not the length of the scattered array.</p>
+                </section>
+
+                <section><h4>Scatter</h4>
+                <p><img src="mpi_figs/fig9_9.png"></p>
+                </section>
+
+                <section><h4>Jacobi iteration</h4>
+                <p><pre><code>// The computation is divided by rows
+int myRows = rows/numP;
+
+MPI_Barrier(MPI_COMM_WORLD);
+
+// Measure current time
+double start = MPI_Wtime();
+
+// Arrays for the chunk of data
+float *myData = (float*) malloc( myRows*cols*sizeof(float));
+float *buff = (float*) malloc( myRows*cols*sizeof(float)); // Auxiliary array
+
+// Scatter the input matrix
+MPI_Scatter(&data, myRows*cols, MPI_FLOAT, &myData, myRows*cols, MPI_FLOAT, 0, MPI_COMM_WORLD);
+memcpy(buff, myData, myRows*cols*sizeof(float));</code></pre></p>
+                </section>
+
+                <section><h4>Jacobi iteration</h4>
+                <p>For each process to be able to update values using the Jacobi iteration they must communicate.</p>
+                <p>In our example, process 1 can update rows 5 and 6, but cannot yet update rows 4 and 7.</p>
+                <p>In order to update boundary rows the processes must share data.</p>
+                <p>In the example: process 1 needs row 3 (stored in process 0) to update row 4, and row 8 (stored in process 2) to update row 7.</p>
+                </section>
+
+                <section><h4>Jacobi iteration</h4>
+                <p>In the code the iterative procedure is contained within a <code>while</code> loop.</p>
+                <p>After sending and receiving the boundary rows, each process updates its cells and calculates the local error.</p>
+                <p>The iteration ends with a call to <code>Allreduce</code> (an extended reduction collective) that stores the sum of the local errors in <b>all</b> processes.</p>
+                <p>This is effectively a combined <code>reduce</code> and <code>broadcast</code>. It is necessary to avoid a potential deadlock due to inconsistent evaluation of the condition in the <code>while</code> loop.</p>
+                </section>
+
+                <section><h4>Jacobi iteration</h4>
+                <p><pre><code>float error = errThres + 1.0;
+float myError;
+
+// buffers to receive boundary rows
+float *prevRow = (float*) malloc( cols*sizeof(float));
+float *nextRow = (float*) malloc( cols*sizeof(float));
+
+while (error &gt errThres){
+    if (myID &gt 0){
+        // Send first row to previous process
+        MPI_Send(&myData, cols, MPI_FLOAT, myID-1, 0, MPI_COMM_WORLD);
+        // Receive previous row from previous process
+        MPI_Recv(&prevRow, cols, MPI_FLOAT, myID-1, 0, MPI_COMM_WORLD);
+    }
+
+    if (myID &lt numP-1){
+        // Send last row to next process
+        MPI_Send(&myData[(myRows-1)*cols], cols, MPI_FLOAT, myID+1, 0, MPI_COMM_WORLD);
+        // Receive next row from next process
+        MPI_Recv(&nextRow, cols, MPI_FLOAT, myID+1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    }
+
+    // Update the first row
+    if ((myID &gt 0) && (myRows &gt 1)){
+        for (int j=1; j &lt cols-1; j++){
+            buff[j] = 0.25f*(myData[cols+j]+myData[j-1]+myData[j+1]+prevRow[j]);
+        }
+    }
+
+    // Update the main block
+    for (int i=1; i &lt myRows-1; i++){
+        for (int j=1; j &lt cols-1; j++){
+            // calculate discrete Laplacian with 4-point stencil
+            buff[i*cols+j] = 0.25f*(myData[(i+1)*cols+j]+myData[i*cols+j-1]+myData[i*cols+j+1]+myData[(i-1)*cols+j]);
+        }
+    }
+
+    // Update the last row
+    if ((myID &lt numP-1) && (myRows &gt 1)){
+        for (int j=1; j &lt cols-1; j++){
+            buff[(myRows-1)*cols+j] = 0.25f*(nextRow[j]+myData[(myRows-1)*cols+j-1]+myData[(myRows-1)*cols+j+1]+myData[(myRows-2)*cols+j]);
+        }
+    }
+
+    // Calculate the local error
+    myError = 0.0;
+    for (int i=0; i &lt myRows; i++){
+        for (int j=1; j &lt cols-1; j++){
+            // Determine difference between data and buff
+            myError += (myData[i*cols+j]-buff[i*cols+j])*(myData[i*cols+j]-buff[i*cols+j]);
+        }
+    }
+
+    memcpy(myData, buff, myRows*cols*sizeof(float));
+
+    // Sum error of all processes and store in 'error' on all processes
+    MPI_Allreduce(&myError, &error, 1, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
+}</code></pre></p>
+                </section>
+
+                <section><h4>Jacobi iteration</h4>
+                <p>Once the matrix has converged, all processes must send their final portion of the matrix to the root process to print the result.</p>
+                <p>This operation is performed with <code>Gather</code>, a collective with behaviour opposite to that of <code>Scatter</code>.</p>
+                <p><code>int MPI_Gather(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPI_Comm comm)</code></p>
+                </section>
+
+                <section><h4>Gather</h4>
+                <p><img src="mpi_figs/fig9_10.png"></p>
+                </section>
+
+                <section><h4>Jacobi iteration</h4>
+                <p><pre><code>// Gather final matrix on process 0 for output
+MPI_Gather(myData, myRows*cols, MPI_FLOAT, data, myRows*cols, MPI_FLOAT, 0, MPI_COMM_WORLD);
+
+// Measure current time
+double end = MPI_Wtime();
+
+if (myID == 0){
+    printf("Time with %d processes: %f seconds.\n",numP,end-start);
+    printOutput(rows, cols, data);
+    free(data);
+}
+
+free(myData);
+free(buff);
+free(prevRow);
+free(nextRow);
+
+// Terminate MPI
+MPI_Finalize();
+
+}</code></pre></p>
+                </section>
+
+                <section><h4>Jacobi iteration</h4>
+                <p>The described parallelisation scheme has a performance issue: all processes must wait to complete updating the rows.</p>
+                <p>Most of the computation is on the interior rows, which do not require any communication.</p>
+                <p>We can overlap computation and communication by using non-blocking communication with <code>Isend</code> and <code>Irecv</code>.</p>
+                <p>We can then wait only for the boundary row communication to complete using <code>MPI_Wait</code> and a <code>MPI_Request</code> datatype.</p>
+                </section>
+
+                <section><h4>Jacobi iteration (non-blocking comms)</h4>
+                <p><pre><code>float error = errThres+1.0;
+float myError;
+
+// Buffers to receive the boundary rows
+float *prevRow = (float*) malloc( cols*sizeof(float));
+float *nextRow = (float*) malloc( cols*sizeof(float));
+MPI_Request request[4];
+
+while (error &gt errThres){
+    if (myID &gt 0){
+        // Send first row to previous process
+        MPI_Isend(&myData, cols, MPI_FLOAT, myID-1, 0, MPI_COMM_WORLD, request[0]);
+        // Receive previous row from previous process
+        MPI_Irecv(&prevRow, cols, MPI_FLOAT, myID-1, 0, MPI_COMM_WORLD, request[1]);
+    }
+
+    if (myID &lt numP-1){
+        // Send last row to next process
+        MPI_Isend(&myData[(myRows-1)*cols], cols, MPI_FLOAT, myID+1, 0, MPI_COMM_WORLD, request[2]);
+        // Receive next row from next process
+        MPI_Irecv(&nextRow, cols, MPI_FLOAT, myID+1, 0, MPI_COMM_WORLD, request[3]);
+    }
+
+    // Update the main block
+    for (int i=1; i &lt myRows-1; i++){
+        for (int j=1; j &lt cols-1; j++){
+            // 4-point stencil Laplacian
+            buff[i*cols+j] = 0.25f*(myData[(i+1)*cols+j]+myData[i*cols+j-1]+myData[i*cols+j+1]+myData[(i-1)*cols+j]);
+        }
+    }
+
+    // Update first row
+    if (myID &gt 0){
+        MPI_Wait(request[1], status);
+        if (myRows &gt 1){
+            for (int j=1; j &lt cols-1; j++){
+                buff[j] = 0.25f*(myData[cols+j]+myData[j-1]+myData[j+1]+prevRow[j]);
+            }
+        }
+    }
+
+    // Update the last row
+    if (myID &lt numP-1){
+        MPI_Wait(request[3], status);
+        if (myRows &gt 1){
+            for (int j=1; j &lt cols-1; j++){
+                buff[(myRows-1)*cols+j] = 0.25f*(nextRow[j]+myData[(myRows-1)*cols+j-1]+myData[(myRows-1)*cols+j+1]+myData[(myRows-2)*cols+j]);
+            }
+        }
+    }
+
+    memcpy(myData, buff, myRows*cols*sizeof(float));
+
+    // Sum error of all processes and store in 'error' on all processes
+    MPI_Allreduce(&myError, &error, 1, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);</code></pre></p>
+                </section>
+
+                <section><h4>Jacobi iteration</h4>
+                <p>Non-blocking code becomes more efficient for high processor number as the computation time decreases (smaller block size).</p>
+                <p>When computation time becomes comparable to communication time, it's beneficial to "hide" the communication with nonblocking calls.</p>
+                </section>
+
+                <section><h4>Jacobi iteration</h4>
+                <p><img src="mpi_figs/fig9_11.png"></p>
+                <p>$64$ cores, $4096 \times 4096$ matrix, error threshold $0.1$</p>
+                </section>
+
+                <section><h3>Derived datatypes (matrix multiplication with submatrix scattering)</h3>
+                <p>We can define datatypes for increased flexibility in the data we can communicate.</p>
+                <p>There are 3 kinds of derived datatype in MPI:</p>
+                <p><ul><li><code>MPI_Type_contiguous(int count, MPI_Datatype oldtype, MPI_Datatype *newtype)</code>: creates <code>newtype</code> of <code>count</code> contiguous elements of <code>oldtype</code>.</li>
+                       <li><code>MPI_Type_vector(int count, int blocklength, int stride, MPI_Datatype oldtype, MPI_Datatype *newtype)</code>: creates <code>newtype</code> of <code>count</code> <code>stride</code>-spaced, <code>blocklength</code>-sized blocks of <code>oldtype</code>.</li>
+                       <li><code>MPI_Type_create_struct(int count, int array_of_blocklengths[], const MPI_Aint array_of_displacements[], const MPI_Datatype array_of_types[], MPI_Datatyoe *newtype)</code>: the most general datatype, with blocks of existing types of various sizes and stored noncontiguously.</li></ul></p>
+                </section>
+
+                <section><h4>Matrix multiplication with submatrix scattering</h4>
+                <p>We implement $\alpha (A \cdot B) = C$ where $A$, $B$ and $C$ are matrices of dimensions $m \times k$, $k \times n$ and $m \times n$ respectively. $\alpha$ is a real number.</p>
+                <p>This is parallelised by having each process be responsible for one submatrix (tile).</p>
+                <p>The rows of $A$ and the columns of $B$ are distributed so each process has the necessary rows and columns to calculate its part of $C$.</p>
+                <p>For simplicity we assume $m$ and $n$ are multiples of the number of processes.</p>
+                </section>
+
+                <section><h4>Matrix multiplication with submatrix scattering</h4>
+                <p><img src="mpi_figs/fig9_12.png" width=500></p>
+                <p>9 processes, $m = 9$, $k = 10$, $n = 12$.</p>
+                </section>
+
+                <section><h4>Matrix multiplication with submatrix scattering</h4>
+                <p>The shape of the matrices and the value of $\alpha$ are read from a configuration file by process 0 and then broadcast to all other processes.</p>
+                <p>We define a <em>struct</em> (user-defined datatype in C) called <code>params</code> to store the parameters.</p>
+                <p>Once MPI is initialised, an MPI struct datatype (called <code>paramsType</code>) is created to send the parameters using a single message.</p>
+                <p>We must <code>commit</code> new datatypes before using them.</p>
+                </section>
+
+                <section><h4>Matrix multiplication with submatrix scattering</h4>
+                <p><pre><code>#include &ltstdlib.h&gt
+#include &ltstdio.h&gt
+#include &ltstring.h&gt
+#include &ltmath.h&gt
+#include "mpi.h"
+
+struct params{
+  int m, k, n;
+  float alpha;
+};
+
+int main (int argc, char *argv[]){
+  // Initialise MPI
+  MPI_Init(&argc,&argv);
+
+  // Get number of processes
+  int numP;
+  MPI_Comm_size(MPI_COMM_WORLD, &numP);
+  int gridDim = sqrt(numP);
+
+  // Get ID of process
+  int myID;
+  MPI_Comm_rank(MPI_COMM_WORLD, &myID);
+
+  if (gridDim*gridDim != numP){
+    if (myID == 0){
+      printf("Error: number of processes must be square.");
+      MPI_Abort(MPI_COMM_WORLD,1);
+    }
+  }
+
+  struct params p;
+  int blockLengths[2] = {3, 1};
+  // MPI_Aint is a datatype for storing memory addresses
+  MPI_Aint lb, extent;
+  // Determine the offset of the blocks in the MPI struct we create
+  MPI_Type_get_extent(MPI_INT, &lb, &extent);
+  // Create an array of offsets for the blocks
+  MPI_Aint disp[2] = {0, 3*extent};
+  // Create an array of types for the blocks
+  MPI_Datatype types[2] = {MPI_INT, MPI_FLOAT};
+
+  // Define a new datatype called paramsType
+  MPI_Datatype paramsType;
+  // Create the new datatype
+  MPI_Type_create_struct(2, blockLengths, disp, types, &paramsType);
+  MPI_Type_commit(&paramsType);
+
+  if (myID == 0){
+    readParams(&p);
+  }
+
+  MPI_Barrier(MPI_COMM_WORLD);
+  double start = MPI_Wtime();
+
+  // Broadcast all parameters using one message
+  MPI_Bcast(&p, 1, paramsType, 0, MPI_COMM_WORLD);
+
+  if ((p.m &lt 1) || (p.n &lt 1) || (p.k &lt 1)){
+    if (myID == 0){
+      printf("Error: 'm', 'k' and 'n' must be greater than 0.");
+      MPI_Abort(MPI_COMM_WORLD,1);
+    }
+  }
+
+  if ((p.m%gridDim) || (p.n%gridDim)){
+    if (myID == 0){
+      printf("Error: 'm' and 'n' must be multiples of the grid dimensions.");
+      MPI_Abort(MPI_COMM_WORLD,1);
+    }
+  }
+
+  float *A, *B, *C, *myA, *myB, *myC;
+  if (myID == 0){
+    A = (float*) malloc(p.m*p.k*sizeof(float));
+    B = (float*) malloc(p.k*p.n*sizeof(float));
+    readInput(p.m, p.k, p.n, A, B);
+  }</code></pre></p>
+                </section>
+
+                <section><h4>Matrix multiplication with submatrix scattering</h4>
+                <p>Now we determine the number of rows per block of $A$ and $C$ (<code>blockRows</code>) and the number of columns per block of $B$ and $C$ (<code>blockCols</code>).</p>
+                <p>In C/C++ matrices are stored in "row-major" order, so we can represent a block of rows with a contiguous derived datatype.</p>
+                <p>To specify the datatype we specify the number of elements: number of rows per block (<code>blockRows</code>) multiplied by the length of each row (k).</p>
+                <p>We then send the corresponding block of rows to all processes to store in their <code>myA</code> array.</p>
+                </section>
+
+                <section><h4>Matrix multiplication with submatrix scattering</h4>
+                <p><pre><code>int blockRows = p.m/gridDim;
+int blockCols = p.n/gridDim;
+MPI_Request req;
+
+// Create datatype for a block of rows of A
+MPI_Datatype rowsType;
+MPI_Type_contiguous(blockRows*p.k, MPI_FLOAT, &rowsType);
+MPI_Type_commit(&rowsType);
+
+// Send rows of A that each process needs
+if (myID == 0){
+  for (int i=0; i &lt gridDim; i++){
+    for (int j=0; j &lt gridDim; j++){
+      MPI_Isend(&A[i*blockRows*p.k], 1, rowsType, i*gridDim+j, 0, MPI_COMM_WORLD, req);
+    }
+  }
+}
+
+myA = (float*) malloc(blockRows*p.k*sizeof(float));
+MPI_Recv(myA, 1, rowsType, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);</code></pre></p>
+                </section>
+
+                <section><h4>Matrix multiplication with submatrix scattering</h4>
+                <p>To send the elements of $B$ we must use <code>MPI_Type_vector</code> because matrix columns are not contiguous in memory.</p>
+                <p>We have <code>blockCols</code> columns per process, with $k$ rows in each column.</p>
+                <p>Using the derived datatype we define, we can send the data to each process using a single message, rather than $k$ messages of <code>blockCols</code> floats for each process.</p>
+                </section>
+
+                <section><h4>Matrix multiplication with submatrix scattering</h4>
+                <p><img src="mpi_figs/fig9_13.png"></p>
+                </section>
+
+                <section><h4>Matrix multiplication with submatrix scattering</h4>
+                <p><pre><code>// Create datatype for a block of columns of B
+MPI_Datatype colsType;
+MPI_Type_vector(p.k, blockCols, p.n, MPI_FLOAT, &colsType);
+MPI_Type_commit(&colsType);
+
+// Send columns of B required by each process
+if (myID == 0){
+  for (int i=0; i &lt gridDim; i++){
+    for (int j=0; j &lt gridDim; j++){
+      MPI_Isend(&B[blockCols*j], 1, colsType, i*gridDim+j, 0, MPI_COMM_WORLD, req);
+    }
+  }
+}
+
+myB = (float*) malloc(p.k*blockCols*sizeof(float));
+MPI_Recv(myB, p.k*blockCols, MPI_FLOAT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);</code></pre></p>
+                </section>
+
+                <section><h4>Matrix multiplication with submatrix scattering</h4>
+                <p>Once all processes have received their pieces of $A$ and $B$, they compute their partial matrix product and store it in <code>myC</code>.</p>
+                </section>
+
+                <section><h4>Matrix multiplication with submatrix scattering</h4>
+                <p><pre><code>myC = (float*) malloc(blockRows*blockCols*sizeof(float));
+
+// Multiply the submatrices
+for (int i=0; i &lt blockRows; i++){
+  for (int j=0; j &lt blockCols; j++){
+    myC[i*blockCols+j] = 0.0;
+      for (int l=0; l &lt p.k; l++){
+        myC[i*blockCols+j] += p.alpha*myA[i*p.k+l]*myB[l*blockCols+j];
+      }
+  }
+}</code></pre></p>
+                </section>
+
+                <section><h4>Matrix multiplication with submatrix scattering</h4>
+                <p>We now need to gather the final result in the matrix $C$ stored on process 0.</p>
+                <p>The problem is that the consecutive rows of <code>myC</code> are not stored in consecutive positions in $C$.</p>
+                <p>We send the data to process 0 using normal <code>MPI_FLOAT</code> values as the data in <code>myC</code> is consecutive.</p>
+                <p>We define a new vector datatype to use a single <code>Recv</code> when receiving the data from the other processes.</p>
+                </section>
+
+                <section><h4>Matrix multiplication with submatrix scattering</h4>
+                <p><img src="mpi_figs/fig9_14.png"></p>
+                </section>
+
+                <section><h4>Matrix multiplication with submatrix scattering</h4>
+                <p><pre><code>  // Create datatype for a block of columns
+  MPI_Datatype block2DType;
+  MPI_Type_vector(blockRows, blockCols, p.n, MPI_FLOAT, &block2DType);
+  MPI_Type_commit(&block2DType);
+
+  // On process 0 receive the data from all other processes
+  if (myID == 0){
+    C = (float*) malloc(p.m*p.n*sizeof(float));
+
+    // Copy locally held (proc 0) data to total C matrix
+    for (int i=0; i &lt blockRows; i++){
+      memcpy(&C[i*p.n], &myC[i*blockCols], blockCols*sizeof(float));
+    }
+ 
+    // Loop through all other processes, determine associated 0-point for data
+    // in C, receive that data from process i*gridDim+j as our new datatype
+    for (int i=0; i &lt gridDim; i++){
+      for (int j=0; j &lt gridDim; j++){
+        if (i || j){
+          MPI_Recv(&C[i*blockRows*p.n+j*blockCols], 1, block2DType, i*gridDim+j, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        }
+      }
+    }
+
+  // If not process 0, send locally held C data to proc 0 as a set of floats
+  } else {
+        MPI_Send(myC, blockRows*blockCols, MPI_FLOAT, 0, 0, MPI_COMM_WORLD);
+  }
+
+  MPI_Barrier(MPI_COMM_WORLD);
+
+  // Measure the current time
+  double end = MPI_Wtime();
+
+  if (myID == 0){
+    printf("Time with %d processes: %f seconds.",numP,end-start);
+    free(A);
+    free(B);
+    free(C);
+  }
+
+  MPI_Type_free(&rowsType);
+  MPI_Type_free(&colsType);
+  MPI_Type_free(&block2DType);
+
+  free(myA);
+  free(myB);
+  free(myC);
+
+  MPI_Finalize();
+  return 0;
+}</code></pre></p>
+                </section>
+
+                <section><h3>Complex communicators (matrix multiplication using SUMMA)</h3>
+                <p>A major disadvantage of the previous method is that data is stored redundantly: for example the first block of rows is stored in processes 0, 1 and 2.</p>
+                <p>It is often necessary to reduce memory overhead when multiplying large-scale matrices.</p>
+                <p>Also, the initial distribution of data is more expensive if there is replication.</p>
+                </section>
+
+                <section><h4>Complex communicators (matrix multiplication using SUMMA)</h4>
+                <p>Scalable Universal Matrix Multiplication Algorithm (SUMMA)</p>
+                <p>A parallel algorithm where the three matrices are distributed among processes without redundancy.</p>
+                </section>
+
+                <section><h4>Complex communicators (matrix multiplication using SUMMA)</h4>
+                <p><img src="mpi_figs/fig9_15.png"></p>
+                <p>9 processes, $m = 9$, $k = 6$, $n = 12$.</p>
+                </section>
+
+                <section><h4>Complex communicators (matrix multiplication using SUMMA)</h4>
+                <p>No single element of any matrix is replicated in more than one process.</p>
+                <p>The problem is that not all the data necessary to compute the partial products are stored in the local memory of the processes.</p>
+                <p>For example: process 0 computes the $C_{00}$ block. This requires $A_{00} \cdot B_{00}$ (stored locally), $A_{01} \cdot B_{10}$ (on processes 1 and 3) and $A_{02} \cdot B_{20}$ (on processes 2 and 6).</p>
+                </section>
+
+                <section><h4>SUMMA algorithm</h4>
+                <p>The computation is performed in $\sqrt{numP}$ iterations.</p>
+                <p>In each iteration one process in each row broadcasts its block $A_{ij}$ to the other processes in the same row.</p>
+                <p>The block $B_{ij}$ is broadcast along the columns of the grid.</p>
+                </section>
+
+                <section><h4>SUMMA algorithm, first iteration</h4>
+                <p><img src="mpi_figs/fig9_16.png"></p>
+                </section>
+
+                <section><h4>SUMMA algorithm, second iteration</h4>
+                <p><img src="mpi_figs/fig9_17.png"></p>
+                </section>
+
+                <section><h4>SUMMA algorithm, third iteration</h4>
+                <p><img src="mpi_figs/fig9_18.png"></p>
+                </section>
+
+                <section><h4>Code, first part</h4>
+                <p><pre><code>#include &ltstdlib.h&gt
+#include &ltstdio.h&gt
+#include &ltmath.h&gt
+#include "mpi.h"
+
+int main (int argc, char *argv[]){
+  // Initialise MPI
+  MPI_Init(&argc,&argv);
+
+  // Get number of processes
+  int numP;
+  MPI_Comm_size(MPI_COMM_WORLD, &numP);
+
+  // Get ID of process
+  int myID;
+  MPI_Comm_rank(MPI_COMM_WORLD, &myID);
+
+  if(argc &lt 4){
+    if(myID == 0){
+      printf("Call this program with: ./summa m k n\n");
+      MPI_Abort(MPI_COMM_WORLD,1);
+    }
+  }
+
+  int m = atoi(argv[1]);
+  int k = atoi(argv[2]);
+  int n = atoi(argv[3]);
+
+  int gridDim = sqrt(numP);
+  if(gridDim*gridDim != numP){
+    if(myID == 0){
+      printf("Number of processes must be square.\n");
+      MPI_Abort(MPI_COMM_WORLD,1);
+    }
+  }
+
+  if((m%gridDim) || (n%gridDim) || (k%gridDim)){
+    if(myID == 0){
+      printf("m, k and n must be multiples of sqrt(numP)\n");
+      MPI_Abort(MPI_COMM_WORLD,1);
+    }
+  }
+
+  if((m &lt 1) || (n &lt 1) || (k &lt 1)){
+    if(myID == 0){
+      printf("m, k and n must be larger than 0.\n");
+      MPI_Abort(MPI_COMM_WORLD,1);
+    }
+  }
+
+  float *A, *B, *C
+
+  if(myID == 0){
+    A = (float*) malloc( m*k*sizeof(float));
+    readInput(m, k, A);
+    B = (float*) malloc( k*n*sizeof(float));
+    readInput(k, n, B);
+    C = (float*) malloc( m*n*sizeof(float));
+  }
+
+  // The computation is divided into 2D blocks
+  int blockRowsA = m/gridDim;
+  int blockRowsB = k/gridDim;
+  int blockColsB = n/gridDim;
+
+  // Create the datatypes of the blocks
+  MPI_Datatype blockAType;
+  MPI_Type_vector(blockRowsA, blockRowsB, k, MPI_FLOAT, &blockAType);
+  MPI_Type_commit(&blockAType);
+
+  MPI_Datatype blockBType;
+  MPI_Type_vector(blockRowsB, blockColsB, n, MPI_FLOAT, &blockBType);
+  MPI_Type_commit(&blockBType);
+
+  MPI_Datatype blockCType;
+  MPI_Type_vector(blockRowsA, blockColsB, n, MPI_FLOAT, &blockCType);
+  MPI_Type_commit(&blockCType);
+
+  float *myA = (float*) malloc( blockRowsA*blockRowsB*sizeof(float));
+  float *myB = (float*) malloc( blockRowsB*blockColsB*sizeof(float));
+  float *myC = (float*) malloc( blockRowsA*blockColsB*sizeof(float));
+  float *buffA = (float*) malloc( blockRowsA*blockRowsB*sizeof(float));
+  float *buffB = (float*) malloc( blockRowsB*blockColsB*sizeof(float));
+
+  MPI_Barrier(MPI_COMM_WORLD);
+  double start = MPI_Wtime();
+
+  MPI_Request req;
+
+  // Scatter A and B
+  if(myID == 0){
+    for(int i=0; i &lt gridDim; i++){
+      for(int j=0; j &lt gridDim; j++){
+        MPI_Isend(A+i*blockRowsA*k+j*blockRowsB, 1, blockAType, i*gridDim+j, 0, MPI_COMM_WORLD, req);
+        MPI_Isend(B+i*blockRowsB*n+j*blockColsB, 1, blockBType, i*gridDim+j, 0, MPI_COMM_WORLD, req);
+      }
+    }
+  }
+
+  MPI_Recv(myA, blockRowsA*blockRowsB, MPI_FLOAT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+  MPI_Recv(myB, blockRowsB*blockColsB, MPI_FLOAT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);</code></pre></p>
+                </section>
+
+                <section><h4>Creating new communicators</h4>
+                <p>We need one broadcast per iteration, row and column of the grid.</p>
+                <p>The <code>Bcast</code> that we have used before sends data to <em>all</em> processes.</p>
+                <p>For the SUMMA algorithm we only need to broadcast to a subset of processes.</p>
+                <p>We can use the MPI function <code>Split</code> to define new communicators as a subset of an existing communicator (MPI_COMM_WORLD).</p>
+                </section>
+
+                <section><h4>Creating new communicators</h4>
+                <p><code>MPI_Comm_split(MPI_Comm comm, int color, int key, MPI_Comm *newcomm)</code></p>
+                <p>This defines a new communicator <code>newcomm</code> that is a subset of <code>comm</code>.</p>
+                <p><code>color</code> identifies in which subset the new communicator resides, <code>key</code> identifies the rank of the new communicator within this subset.</p>
+                </section>
+
+                <section><h4>New communicators for the 3x3 grid</h4>
+                <p><img src="mpi_figs/table9_1.png"></p>
+                </section>
+
+                <section><h4>New communicators for the 3x3 grid</h4>
+                <p><pre><code>MPI_Comm rowComm;
+MPI_Comm_split(MPI_COMM_WORLD, myID/gridDim, myID%gridDim, &rowComm);
+
+MPI_Comm colComm;
+MPI_Comm_split(MPI_COMM_WORLD, myID%gridDim, myID/gridDim, &colComm);</code></pre></p>
+                </section>
+
+                <section><h4>Main SUMMA loop</h4>
+                <p><pre><code>// The main loop
+for (int i=0; i &lt gridDim; i++){
+  if(myID%gridDim == i){
+    memcpy(&buffA, &myA, blockRowsA*blockRowsB*sizeof(float));
+  }
+  if(myID/gridDim == i){
+    memcpy(&buffB, &myB, blockRowsB*blockColsB*sizeof(float));
+  }
+
+  // Broadcast along the communicators
+  MPI_Bcast(&buffA, blockRowsA*blockRowsB, MPI_FLOAT, i, rowComm);
+  MPI_Bcast(&buffB, blockRowsB*blockColsB, MPI_FLOAT, i, colComm);
+
+  // The multiplication of the submatrices
+  for (int i=0; i &lt blockRowsA; i++){
+    for (int j=0; j &lt blockColsB; j++){
+      for (int l=0; l &lt blockRowsB; l++){
+        myC[i*blockColsB+j] += buffA[i*blockRowsB+l]*buffB[l*blockColsB+j];
+      }
+    }
+  }
+
+  // Gather final matrix to memory of process 0
+  if(myID == 0){
+    for (int i=0; i &lt blockRowsA; i++){
+      memcpy(&C[i*n], &myC[i*blockColsB], blockColsB*sizeof(float));
+    }
+
+    for (int i=0; i &lt gridDim; i++){
+      for (int j=0; j &lt gridDim; j++){
+        if(i || j){
+          MPI_Recv(&C[i*blockRowsA*n+j*blockColsB], 1, blockCType, i*gridDim+j, 0, MPI_STATUS_IGNORE);
+        }
+  } else {
+    MPI_Send(myC, blockRowsA*blockColsB, MPI_FLOAT, 0, 0);
+  }
+
+  double end = MPI_Wtime();
+
+  if(myID == 0){
+    printf("Time with %d processes: %f seconds.\n",numP,end-start);
+    printOutput(m, n, C);
+    free(A);
+    free(B);
+    free(C);
+  }
+
+  MPI_Barrier(MPI_COMM_WORLD);
+
+  free(myA);
+  free(myB);
+  free(myC);
+  free(buffA);
+  free(buffB);
+
+  // Terminate MPI
+  MPI_Finalize();
+  return 0;
+}</code></pre></p>
+                </section>
+
+                <section><h4>Comparing SUMMA with matrix scattering</h4>
+                <p><img src="mpi_figs/fig9_19.png"></p>
+                <p>64 cores, $8192 \times 8192$ matrices.
+                </section>
+
+                <section><h4>Comparing SUMMA with matrix scattering</h4>
+                <p>SUMMA uses less memory and provides a faster runtime.</p>
+                <p>The data replication in conventional matrix scattering makes communication more expensive.</p>
+                <p>The blocks in SUMMA are also smaller, helping to improve computation performance due to more efficient usage of CPU caches.</p>
+                </section>
+
+                <section><h4>Creating communicators</h4>
+                <p>The function <code>MPI_Comm_dup</code> duplicates the original communicator.</p>
+                <p>There are a set of functions <code>MPI_Group_</code> that allow us to group processes.</p>
+                <p>To create communicators from groups, we create the groups first, then call:</p>
+                <p><code>MPI_Comm_create(MPI_Comm comm, MPI_Group group, MPI_Comm *newcomm)</code></p>
+                <p>The memory allocated to a group is released with <code>MPI_Group_free</code>.</p>
+                </section>
+
+                <section><h4>Creating communicators</h4>
+                <p>Routines for manipulating groups (all have names <code>MPI_Group_</code>):</p>
+                <p><ul><li><code>union</code>: produces a group from the union of two groups.</li>
+                       <li><code>intersection</code>: produces a group from the intersection of two groups.</li>
+                       <li><code>difference</code>: creates a group with only those processes that exist in the first input group, not in the second.</li>
+                       <li><code>incl</code>: selects processes from a group according to a list of ranks (IDs) provided.</li>
+                       <li><code>excl</code>: opposite of the previous functions, selects those processes <em>not</em> in the list.</li></ul></p>
+                </section>
+
+			</div>
+		</div>
+
+<script>
+
+require(
+    {
+      // it makes sense to wait a little bit when you are loading
+      // reveal from a cdn in a slow connection environment
+      waitSeconds: 15
+    },
+    [
+      "https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/lib/js/head.min.js",
+      "https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/js/reveal.js"
+    ],
+
+    function(head, Reveal){
+
+        // Full list of configuration options available here: https://github.com/hakimel/reveal.js#configuration
+        Reveal.initialize({
+            controls: true,
+            progress: true,
+            history: true,
+
+            transition: "slide",
+
+            // Optional libraries used to extend on reveal.js
+            dependencies: [
+                { src: "https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/plugin/highlight/highlight.js" }
+            ]
+        });
+
+        var update = function(event){
+          if(MathJax.Hub.getAllJax(Reveal.getCurrentSlide())){
+            MathJax.Hub.Rerender(Reveal.getCurrentSlide());
+          }
+        };
+
+        Reveal.addEventListener('slidechanged', update);
+
+        function setScrollingSlide() {
+            var scroll = false
+            if (scroll === true) {
+              var h = $('.reveal').height() * 0.95;
+              $('section.present').find('section')
+                .filter(function() {
+                  return $(this).height() > h;
+                })
+                .css('height', 'calc(95vh)')
+                .css('overflow-y', 'scroll')
+                .css('margin-top', '20px');
+            }
+        }
+
+        // check and set the scrolling slide every time the slide change
+        Reveal.addEventListener('slidechanged', setScrollingSlide);
+
+    }
+
+);
+</script>
+	</body>
+</html>
