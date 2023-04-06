@@ -1,0 +1,800 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="X-UA-Compatible" content="chrome=1" />
+
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+
+<title>Arquitecturas modernas</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+<!-- General and theme style sheets -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/css/reveal.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/css/theme/white.css" id="theme">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/lib/css/zenburn.css">
+
+<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+<script>
+if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = 'https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/css/print/pdf.css';
+        document.getElementsByTagName( 'head' )[0].appendChild( link );
+}
+
+</script>
+
+<!--[if lt IE 9]>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/lib/js/html5shiv.js"></script>
+<![endif]-->
+
+<!-- Loading the mathjax macro -->
+<!-- Load mathjax -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS_HTML"></script>
+    <!-- MathJax configuration -->
+    <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+            displayMath: [ ['$$','$$'], ["\\[","\\]"] ],
+            processEscapes: true,
+            processEnvironments: true
+        },
+        // Center justify equations in code and markdown cells. Elsewhere
+        // we use CSS to left justify single line equations in code cells.
+        displayAlign: 'center',
+        "HTML-CSS": {
+            styles: {'.MathJax_Display': {"margin": 0}},
+            linebreaks: { automatic: false }
+        }
+    });
+    </script>
+    <!-- End of mathjax configuration -->
+
+<!-- Get Font-awesome from cdn -->
+<!--<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.css">-->
+
+
+        <style type="text/css">
+            .container{
+                        display: flex;
+                      }
+            .col{
+                      flex: 1;
+                }
+            .reveal section p {
+                      display: inline-block;
+                      font-size: 0.6em;
+                      line-height: 1.2em;
+                      vertical-align: top;
+                      text-align: left;
+            }
+            .reveal section li {
+                      font-size: 0.6em;
+            }
+            .reveal section td {
+                      font-size: 0.6em;
+            }
+            .reveal section img {
+                      border: none;
+            }
+        </style>
+
+	</head>
+	<body>
+			<div class="reveal">
+			<div class="slides">
+
+                <section><h1>Arquitecturas modernas</h1>
+                </section>
+
+                <section><h2>Contenidos</h2>
+                <ul><li>Optimizando acceso a la memoria con el <i>cache</i>.</li>
+                    <li>Primer nivel de paralelización: vectorización (SIMD).</li>
+                </section>
+
+				<section><h3>Acceso a la memoria</h3>
+                <p>En la arquitectura de von Neumann el CPU se conecta con la memoria RAM a través de un <i>bus</i>.</p>
+                <img src="arquitecturas_modernas_figs/3-1_von_neumann.png">
+                </section>
+
+                <section><h4>Comunicación es más lenta que el cómputo</h4>
+                <p>Tiempo de cómputo en un CPU es mucho menor que el tiempo de comunicación a través del <i>bus</i>: <i>cuello de botella de von Neumann</i>.</p>
+                <p>Ejemplo: 8 core CPU, 3 GHz frecuencia del reloj, supongamos 16 flops (precisión doble) por ciclo del reloj.</p>
+                <p>Rendimiento de cómputo peak $3$ GHz $\times 8 \times 16 = 384$ GFlops/s.</p>
+                <p>Transferencia de datos peak del módulo de DRAM $51.2$ GB/s.</p>
+                </section>
+
+                <section><h4>Ejemplo: producto punto</h4>
+                <p>Considerar el producto punto de dos vectores largos ($n = 2^{30}$):</p>
+                <pre><code class="language-c">double dotp = 0.0;
+for (int i = 0; i &lt n; i++)
+    dotp += u[i] * v[i];</code></pre>
+                <p>Dos operaciones por iteración: $2 \cdot n = 2^{31}$ Flops. Transferencia de la memoria de $2^{31} \times 8$ B $= 16$ GB.</p>
+                </section>
+
+                <section><h4>Ejemplo: producto punto</h4>
+                <p><ul><li>Cómputo: $t_{comp}$ = 2 GFlops/384 GFlops/s = 5.2 ms.</li>
+                       <li>Transferencia de datos: $t_{mem}$ = 16 GB/51.2 GB/s = 312.5 ms.</li></ul></p>
+                <p>Suponiendo simultaneidad de cómputo y acceso a la memoria: t_{exec} \geq \text{max}(t_{comp},t_{mem}) = 312.5$ ms.</p>
+                <p>El tiempo de transferencia de datos domina. Ocupamos los datos una vez, sin reuso: el algoritmo es <b>limitado por memoria</b> (<i>memory-bound</i>).</p>
+                <p>Rendimiento máximo posible es $2^{31} \text{Flop}/312.5 \text{ms} = 6.4$ GFlop/s, 2% del rendimiento peak del computador.</p>
+                </section>
+
+                <section><h4>Memoria cache</h4>
+                <p>Para aliviar este problema, los CPUs tienen una memoria rápida "on-board" que se llama <b>cache</b>.</p>
+                <img src="arquitecturas_modernas_figs/3-2_cache.png">
+                </section>
+
+                <section><h4>Memoria cache</h4>
+                <p>Típicamente hay $3$ niveles de cache: L1, L2 y L3.</p>
+                <p>L1 es pequeño y rápido, L3 es grande pero lento. Los cache pueden ser privados para un sólo core o compartidos entre varios cores.</p>
+                <img src="arquitecturas_modernas_figs/3-5_L2_cache.png">
+                </section>
+
+                <section><h4>Jerarquía de memoria</h4>
+                <img src="arquitecturas_modernas_figs/memory_hierarchy.png">
+                </section>
+
+                <section><h3>Memoria cache</h3>
+                <p>Considerar el mismo ejemplo, 8-core 3 GHz CPU con 384 GFlop/s rendimiento peak, bandwidth de la memoria principal de 51.2 GB/s.</p>
+                <p>Ahora supongamos que hay un cache de 512 KB, con tiempo de acceso de un ciclo del reloj (velocidad de un registro).</p>
+                <p>Ejemplo: producto de dos matrices de $n \times n$ con $n = 128$:</p>
+                <pre><code class="language-c">for (int i = 0; i &lt n; i++)
+    for (int j = 0; j &lt n; j++) {
+        double dotp = 0.0;
+        for (int k = 0; k &lt n; k++)
+            dotp += U[i][k] * V[k][j];
+        W[i][j] = dotp;
+    }</code></pre>
+                </section>
+
+                <section><h4>Memoria cache</h4>
+                <p>Las dimensiones de las matrices son pequeñas: $128 \times 128 \times 8$ B $= 128$ KB por matriz (precisión doble), así que todas ($3 \times 128 = 384$ KB) caben en el cache.</p>
+                <p>Para cada uno de los $n^2$ valores en $W$ calculamos un producto punto con $2\cdot n$ operaciones, así que tenemos $2\cdot n^3 = 2\cdot 128^3 = 2^{22}$ Flops.</p>
+                <p><ul><li><b>Cómputo</b>: $t_{comp} = 2^{22} \text{Flop}/384 \text{GFlop/s} = 10.4 \mu\text{s}$</li>
+                       <li><b>Transferencia de datos</b>: $t_{mem} = 384 \text{KB}/51.2 \text{GB/s} = 7.5 \mu\text{s}$ (para cargar las matrices al cache al principio)</li></ul></p>
+                </section>
+                
+                <section><h4>Memoria cache</h4>
+                <p>Tiempo de cómputo ahora es mayor que el tiempo de transferencia de datos: el algoritmo es <b>limitado por el cómputo</b> (<i>compute-bound</i>).</p>
+                <p>Suponiendo que el cómputo y la transferencia ocurren secuencialmente $t_{exec} \geq t_{comp} + t_{mem} = 10.4 \mu\text{s} + 7.5 \mu\text{s} = 17.9 \mu\text{s}$.</p>
+                <p>Este es $2^{22} \text{Flop}/17.9 \mu\text{s} = 223$ GFlop/s, 60% del rendimiento peak.</p>
+                </section>
+
+                <!--<section><h3>Cache algorithms</h3>
+                <p>Previous example assumed data fits into cache. This is usually <b>not</b> true.</p>
+                <p>We need a set of cache replacement policies (<i>cache algorithms</i>) to determine which data is stored in cache during execution.</p>
+                <p>Cache algorithms address the following questions:</p>
+                <p><ul><li>Which data do we load from main memory and where in cache do we store it?</li>
+                       <li>If cache is already full, which data do we evict?</li></ul></p>
+                </section>
+
+                <section><h4>Cache algorithms</h4>
+                <p>When CPU requests a data item from memory, the cache is checked first to see if data is already there.</p>
+                <p>If so: <b>cache hit</b>. Otherwise: <b>cache miss</b>. Cache algorithms try to maximise the <b>hit ratio</b>.</p>
+                <p>The design of cache algorithms is guided by two principles:</p>
+                <p><ul><li>Spatial locality: contiguous memory locations.</li>
+                       <li>Temporal locality: cache data that was recently used is maintained in cache.</li></ul></p>
+                </section>-->
+
+                <section><h4>Uso del cache</h4>
+                <p>Considerar el siguiente código para determinar el valor máximo de un array $A$ de tamaño $n$ (donde los elementos de $A$ están guardados contiguamente en la memoria).</p>
+                <pre><code class="language-c">for (int i = 0; i &lt n; i++)
+    maximum = max(A[i], maximum);</code></pre>
+                <p><ul><li>Supongamos que, inicialmente, el cache está vacío. Primera iteración: buscamos $A[0]$ en la memoria, "cache miss".</li>
+                <li>El sistema carga una <b>línea de cache</b> con valores de ubicaciones vecinas en la memoria.</li>
+                <li>Suponiendo una línea de cache de $64$ B y precisión doble, el sistema cargará 8 valores del array (desde $A[0]$ hasta $A[7]$) al cache.</li>
+                <li>Las próximas $7$ iteraciones son "cache hits". Cuando buscamos $A[8]$ tenemos un "cache miss", y repetimos el proceso con los próximos 8 elementos.</li></ul></p>
+                <p>El "hit ratio" en este ejemplo es 87.5%.</p>
+                </section>
+
+                <!--<section><h4>Cache algorithms: temporal locality</h4>
+                <p>Cache is organised into blocks (cache lines) of fixed size (e.g. $64$ B).</p>
+                <p>Cache mapping determines in which block a particular entry of main memory is stored:</p>
+                <p><ul><li><i>Direct-mapped cache</i>: each block from memory is stored in exactly one cache line (typically low hit ratio).</li>
+                       <li><i>Two-way associative cache</i>: each block from memory is stored in one of two possible cache lines. A strategy to decide which is <i>least-recently used</i> (LRU): we evict the least recently accessed entry (improves hit ratio substantially).</li>
+                       <li><i>$n$-way associative cache</i>: usually with $n = 2$, $4$ or $8$. Fully associative caches are usually too expensive.</li></ul></p>
+                </section>
+
+                <section><h4>Cache algorithms: temporal locality</h4>
+                <img src="modern_architectures_figs/3-3_cache_types.png">
+                <p>(A) direct-mapped, (B) two-way associative</p>
+                </section>-->
+
+                <section><h3>Optimizando el uso del cache</h3>
+                <p><ul><li>Considerar multiplicación de matrices de nuevo, $A \cdot B = C$, con dimensiones $m \times l$, $l \times n$ y $m \times n$.</li>
+                <li>Las matrices están guardados como arrays unidimensionales en orden principal de fila (<i>row-major order</i>). El siguiente programa implementa multiplicación de matrices en dos maneras:</li></ul></p>
+                <pre><code class="language-c">#include &ltstdio.h&gt
+#include &ltstdint.h&gt
+#include &ltstdlib.h&gt
+#include &lttime.h&gt
+
+int main() {
+
+    const uint64_t m = 1 &lt&lt 10;
+    const uint64_t n = 1 &lt&lt 10;
+    const uint64_t l = 1 &lt&lt 10;
+
+    clock_t t;
+
+    t = clock();
+    float* A = malloc(sizeof(float)*m*l);
+    float* B = malloc(sizeof(float)*l*n);
+    float* Bt = malloc(sizeof(float)*n*l);
+    float* C = malloc(sizeof(float)*m*n);
+
+    for (uint64_t i = 0; i &lt m*l; i ++){
+      A[i] = 0.0;
+      B[i] = 0.0;
+      Bt[i] = 0.0;
+      C[i] = 0.0;
+    }
+
+    t = clock() - t;
+    
+    double time_taken = ((double)t)/CLOCKS_PER_SEC;
+    printf("init %f\n",time_taken);
+
+    t = clock();
+    for (uint64_t i = 0; i &lt m; i++) {
+      for (uint64_t j = 0; j &lt n; j++) {
+          float accum = 0;
+          for (uint64_t k = 0; k &lt l; k++) {
+              accum += A[i*l+k]*B[k*n+j];
+          }
+          C[i*n+j] = accum;
+       }
+    }
+    t = clock() - t;
+
+    time_taken = ((double)t)/CLOCKS_PER_SEC;
+    printf("naive %f\n",time_taken);
+
+    t = clock();
+    for (uint64_t k = 0; k &lt l; k++) {
+        for (uint64_t j = 0; j &lt n; j++) {   
+            Bt[j*l+k] = B[k*n+j];
+        }
+    }
+    t = clock() - t;
+
+    time_taken = ((double)t)/CLOCKS_PER_SEC;
+    printf("transpose %f\n",time_taken);
+
+    t = clock();
+    for (uint64_t i = 0; i &lt m; i++) {
+        for (uint64_t j = 0; j &lt n; j++) {
+            float accum = 0;
+            for (uint64_t k = 0; k &lt l; k++) {
+                accum += A[i*l+k]*Bt[j*l+k];
+            }
+            C[i*n+j] = accum;
+        }
+    }
+    t = clock() - t;
+
+    time_taken = ((double)t)/CLOCKS_PER_SEC;
+    printf("transpose_mult %f\n",time_taken);
+
+    return 0;
+}</code></pre>
+                </section>
+
+                <section><h4>Optimizando el uso de cache</h4>
+                <p>EL primer ciclo utiliza un método "ingenuo", donde el acceso a la matriz $B$ no es contiguo.</p>
+                <p>Los valores en fila $k$ y $k+1$ están separados por $l \times \text{sizeof}(\text{float})$ bytes en memoria, y no estarán en la misma línea de cache.</p>
+                <p>Si $l$ es suficientemente grande el cache estará borrado antes de que podamos leer el valor $k+1$, así que no aprovecharemos del cache.</p> 
+                <p>El último ciclo utiliza la transpuesta de $B$, permitiendo contigüidad en el acceso de la memoria y por lo tanto más "cache hits".</p>
+                </section>
+
+                <section><h4>Optimizando el uso de cache</h4>
+                <img src="arquitecturas_modernas_figs/3-4_array_multiplication_cache_miss.png">
+                </section>
+
+                <!--<section><h3>Cache coherence</h3>
+                <p>What about writing to memory? Only modifying cached value leads to <i>inconsistency</i>.</p>
+                <p>Two policies are used to ensure <i>coherence</i> between cache and main memory:</p>
+                <p><ul><li><b>Write-through</b>: we write to the main memory address associate to the cache line. Slow if there are many writes.</li>
+                       <li><b>Write-back</b>: the cache line is modified and marked as <i>dirty</i>. When evicting a dirty cache line the data is written to main memory.</li></ul></p>
+                <div class="container">
+                <div class="col">
+                <p>The situation is more complicated in a multi-core CPU with multi-level cache: private low-level L1 cache, shared high-level L2 cache</p>
+                </div>
+                <div class="col">
+                <img src="modern_architectures_figs/3-5_L2_cache.png" width=300>
+                </div>
+                </div>
+                <p>Various protocols have been developed to implement cache coherence in parallel systems, e.g. <i>MESI</i>.</p>
+                </section>
+
+                <section><h4>Cache coherence</h4>
+                <img src="modern_architectures_figs/3-6_cache_incoherence.png" width=600>
+                </section>
+
+                <section><h3>False sharing</h3>
+                <p>Imagine a multi-core system operating on distinct data items (fitting a single cache line) stored in the same region of main memory.</p>
+                <p>When one core writes to its own cache line, this invalidates the cache line for all other cores.</p>
+                <p>These cores then need to retrieve the data from main memory again, even though they have not modified anything.</p>
+                <p>This is <i>false sharing</i> or <i>cache line ping-pong</i> and it severely degrades performance.</p>
+                </section>-->
+
+                <section><h3>Niveles de paralelismo</h3>
+                <p>Taxonomía de Flynn:</p>
+                <p><ul><li><b>SISD (Single Instruction, Single Data)</b>: arquitectura tradicional de von Neumann.</li>
+                       <li><b>SIMD (Single Instruction, Multiple Data)</b>: misma operación realizada en distintos datos en paralelo.</li>
+                       <li><b>MIMD (Multiple Instruction, Multiple Data)</b>: varios procesadores ejecutan instrucciones diferentes en datos diferentes.</li>
+                       <li><b>MISD (Multiple Instruction, Single Data)</b>: varios procesadores ejecutan instrucciones diferentes en los mismos datos. Poco cómun.</li></ul></p>
+                </section>
+
+                <section><h4>Niveles de paralelismo</h4>
+                <img src="arquitecturas_modernas_figs/3-7_flynn_taxonomy.png" width=600>
+                </section>
+
+                <section><h4>Niveles de paralelismo</h4>
+                <p>Los CPUs y GPUs modernos aprovechan de varios niveles de paralelismo.</p>
+                <p><ul><li><b>Núcleos multiples</b>: paralelismo MIMD.</li>
+                       <li><b>Unidades vectoriales en cada core</b>: paralelismo SIMD.</li>
+                       <li><b>Paralelismo al nivel de las instrucciones</b>: pipelining, superscalar execution (No forma parte de este curso).</li></ul></p>
+                </section>
+
+                <section><h3>Concepto de SIMD</h3>
+                <p>Se ejecuta la misma instrucción en diferentes datos.</p>
+                <p>Ejemplo con un ciclo secuencial:</p>
+                <pre><code class="language-c">for (i = 0; i &lt n; i++)
+    w[i] = u[i] - v[i];</code></pre>
+                <p>Queremos implementar este ciclo en una manera SIMD.</p>
+                <p>Cada iteración es independiente, así que es fácil paralelizar.</p>
+                <img src="arquitecturas_modernas_figs/3-8_simd_parallel_subtract.png" width=400>
+                </section>
+
+                <section><h4>Concepto de SIMD</h4>
+                <p>No es tan fácil paralelizar en este ejemplo, por la condicional:</p>
+                <pre><code class="language-c">for (i = 0; i &lt n; i++)
+    if (u[i] &gt 0)
+        w[i] = u[i] - v[i];
+    else
+        w[i] = u[i] + v[i];</code></pre>
+                <p>Se puede paralelizar en una manera SIMD si permitimos que una unidad de procesamiento puede ser <b>inactivo</b>.</p>
+                </section>
+
+                <section><h4>Concepto de SIMD</h4>
+                <img src="arquitecturas_modernas_figs/3-9_simd_conditional_add.png" width=400>
+                <p><ol><li>Cada unidad de procesamiento compara el valor de $U$ en su registro con $0$ y asigna un <i>flag</i>.</li>
+                       <li>Todos los unidades donde el <i>flag</i> está definido ejecutan $U-V$. Los otros esperan.</li>
+                       <li>Todos los unidades donde el <i>flag</i> NO está definido ejecutan $U+V$. Los otros esperan.</li></ol></p>
+                <p>La condicional reduce la eficiencia de la implementación SIMD por 50%.</p>
+                </section>
+
+                <section><h3>Vectorización en los CPUs modernos</h3>
+                <p>Soporte para vectorización con operaciones SIMD es común en los CPUs modernos. Hay un conjunto de instrucciones (<i>instruction set</i>) para su implementación.</p>
+                <p><b>AVX</b>: registros vectoriales de 256-bit (8 floats).</p>
+                <p><b>AVX-512</b>: registros vectoriales de 512-bit (16 floats).</p>
+                </section>
+
+                <section><h4>Vectorización: intrínsecas de SIMD (<i>intrinsics</i>)</h4>
+                <p>Las intrínsecas consisten de funciones escritas en ensamblador y definiciones de tipos de datos que se puede usar en código de C y C++.</p>
+                <p>Ejemplo: suma de dos registros de AVX 256-bit:</p>
+                <pre><code class="language-c">__m256 a,b,c;            // Declarar registros AVX
+...                      // Initializar a y b
+c = __m256_add_ps(a,b);  // c[0:8] = a[0:8] + b[0:8]</code></pre>
+                <p>Una variable de tipo <code>__m256</code> representa un registro de 256-bit que almacena $8$ floats de $32$-bit.</p>
+                <p>La intrínseca AVX <code>__m256_add_ps</code> realiza una suma paralela en manera SIMD (suma paralela de $8$ floats).</p>
+                </section>
+
+                <section><h4>Vectorización: intrínsecas de SIMD</h4>
+                <img src="arquitecturas_modernas_figs/3-10_avx_addition.png">
+                </section>
+
+                <section><h4>Ejemplo de un código con intrínsecas de SIMD</h4>
+                <p><pre><code class="language-c">#include &ltstdint.h&gt
+#include &ltstdio.h&gt
+#include &ltimmintrin.h&gt
+#include &lttime.h&gt
+
+void plain_vecadd(float* A, float* B, float* C, uint64_t N){
+
+    for (uint64_t i = 0; i &lt N; i++){
+        C[i] = A[i] + B[i];
+    }
+
+}
+
+void avx2_vecadd(float* A, float* B, float* C, uint64_t N){
+
+    __m256 X;
+    for (uint64_t i = 0; i &lt N; i += 8){
+        __m256 AV = _mm256_load_ps(A+i);
+        __m256 BV = _mm256_load_ps(B+i);
+        X = _mm256_add_ps(AV,BV);
+        _mm256_store_ps(C+i, X);
+    }
+
+}
+
+void populate_vectors(float* A, float* B, uint64_t N){
+
+    for (uint64_t i = 0; i &lt N; i++){
+        A[i] = i*1.0;
+        B[i] = i*2.0;
+    }
+
+}
+
+int main(){
+
+    clock_t begin, end;
+    double time_spent;
+
+    uint64_t N = 1 &lt&lt 20;
+
+    printf("Vector elements: %lu\n",N);
+
+    uint64_t error_flag = 0;
+
+    float* A = _mm_malloc(sizeof(float)*N, 32); //align on 32-byte boundaries for AVX registers
+    float* B = _mm_malloc(sizeof(float)*N, 32);
+    float* C = _mm_malloc(sizeof(float)*N, 32);
+    float check;
+
+    populate_vectors(A, B, N);
+
+    begin = clock();
+    plain_vecadd(A, B, C, N);
+    end = clock();
+    time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+    printf("Serial add: %f\n",time_spent);
+
+    begin = clock();
+    avx2_vecadd(A, B, C, N);
+    end = clock();
+    time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+    printf("Vector add: %f\n",time_spent);
+
+    for (uint64_t i = 0; i &lt N; i++){
+        check = i*3.0 - C[i];
+        if (check != 0.0){
+           error_flag = 1;
+        }
+    }
+
+    if (error_flag == 1){
+        printf("Error in sum.\n");
+    }
+}</code></pre></p>
+                <p><code>gcc -march=skylake vector_addition.c -o vector_addition.x</code></p>
+                </section>
+
+                <section><h4>Ejemplo de un código con intrínsecas SIMD</h4>
+                <p>En el siguiente código utilizamos intrínsecas de AVX2 (una extensión de AVX) para multiplicación de matrices $A \times B = C$.</p>
+                <img src="arquitecturas_modernas_figs/3-11_add_intrinsic.png">
+                <p>Ilustración de la intrínseca <code>_mm256_fmadd_ps(AV,BV,X)</code> (utilizada en el siguiente código)</p>
+                </section>
+
+                <section><h4>Ejemplo de un código con intrínsecas SIMD</h4>
+                <pre><code class="language-c">#include &ltcstdint&gt // uint32_t
+#include &ltiostream&gt // std::cout
+#include &ltimmintrin.h&gt // AVX intrinsics
+
+void plain_tmm(float* A,
+               float* B,
+               float* C,
+               uint64_t M,
+               uint64_t L,
+               uint64_t N) {
+
+    for (uint64_t i = 0; i &lt M; i++)
+        for (uint64_t j = 0; j &lt N; j++) {
+            float accum = float(0);
+            for (uint64_t k = 0; k &lt L; k++)
+                accum += A[i*L+k]*B[j*L+k];
+            C[i*N+j] = accum;
+        }
+}
+
+void avx2_tmm(float* A,
+              float* B,
+              float* C,
+              uint64_t M,
+              uint64_t L,
+              uint64_t N) {
+
+    for (uint64_t i = 0; i &lt M; i++)
+        for (uint64_t j = 0; j &lt N; j++) {
+
+            __m256 X = _mm256_setzero_ps();
+            for (uint64_t k = 0; k &lt L; k += 8) {
+                const __m256 AV = _mm256_load_ps(A+i*L+k);
+                const __m256 BV = _mm256_load_ps(B+j*L+k);
+                X = _mm256_fmadd_ps(AV,BV,X);
+            }
+
+            C[i*N+j] = hsum_avx(X);
+        }
+}</code></pre>
+                <p class="fragment"><span style="color:red">Ejercicio</span>: implementar la función <code>hsum_avx</code>.</p>
+                </section>
+
+                <section><h3>AoS vs. SoA</h3>
+                <p>La organización de los datos tiene un impacto en la eficiencia de una paralelización SIMD.</p>
+                <p><ul><li><b>AoS (Array of Structures)</b>: guarda estructuras consecutivamente en un array.</li>
+                       <li><b>SoA (Structure of Arrays)</b>: ocupa un array por dimensión de los datos, todos dentro de una estructura.</li></ul></p>
+                </section>
+
+                <section><h4>AoS/SoA caso de estudio: vectores en 3D</h4>
+                <p>Considerar $n$ vectores en 3D.</p>
+                <p>AoS sería un sólo array de $3n$ elementos. SoA sería $3$ arrays de $n$ elementos cada uno.</p>
+                <img src="arquitecturas_modernas_figs/3-12_aos_and_soa.png">
+                <p><ul><li>Calcular la norma con una implementación de SIMD es más eficiente utilizando SoA</li>
+                <li>Se puede convertir de AoS a SoA y viceversa si es necesario.</li></ul></p>
+                </section>
+
+                <section><h4>AoS/SoA case study: 3D vectors</h4>
+                <p>Definición AoS:</p>
+                <p><pre><code class="language-c">float* xyz = malloc(sizeof(float)*3*n);</code></pre></p>
+                <p>Definición SoA:</p>
+                <p><pre><code class="language-c">float* x = malloc(sizeof(float)*n);
+float* y = malloc(sizeof(float)*n);
+float* z = malloc(sizeof(float)*n);</code></pre></p>
+                </section>
+
+                <section><h4>Normalizar vectores</h4>
+                <p>$\hat{v}_i = \frac{v_i}{||v_i||} = \left( \frac{x_i}{\rho_i}, \frac{y_i}{\rho_i}, \frac{z_i}{\rho_i} \right)$ where $\rho_i = \sqrt{x_i^2 + y_i^2 + z_i^2}$</p>
+                <p>Esta norma se puede calcular para datos AoS en un código secuencial así:</p>
+                <p><pre><code class="language-c">void plain_aos_norm(float* xyz, uint64_t length) {
+
+    for (uint64_t i = 0; i &lt 3*length; i += 3) {
+        const float x = xyz[i+0];
+        const float y = xyz[i+1];
+        const float z = xyz[i+2];
+        float irho = 1.0f/sqrtf(x*x+y*y+z*z);
+
+        xyz[i+0] *= irho;
+        xyz[i+1] *= irho;
+        xyz[i+2] *= irho;
+    }
+}</code></pre></p>
+                </section>
+
+                <section><h4>Normalizar vectores</h4>
+                <p>Vectorización de esta operación de normalizar (utilizando AoS) es ineficiente porque:</p>
+                <p><ul><li>Los registros vectoriales no quedarían totalmente ocupados: registro de 128-bit con floats, un sólo vector ocuparía $3$ de los $4$ elementos disponibles.</li>
+                       <li>Sumando los valores cuadrados para el cálculo de <code>irho</code> requiere operaciones entre canales horizontales de los registros, resultando en un sólo valor para el cálculo de la raíz cuadrada inversa.</li>
+                       <li>La ineficiencia aumenta con el tamaños de los registros.</li></ul></p>
+                </section>
+
+                <section><h4>Normalizar vectores</h4>
+                <p>Vectorización es mucho más eficiente con SoA:</p>
+                <p><pre><code class="language-c">void avx_soa_norm(float* x, float* y, float* z, uint64_t length) {
+
+    for (uint64_t i = 0; i &lt length; i += 8) {
+
+        __m256 X = _mm256_load_ps(x+i);
+        __m256 Y = _mm256_load_ps(y+i);
+        __m256 Z = _mm256_load_ps(z+i);
+
+        __m256 R = _mm256_fmadd_ps(X, X,
+                   _mm256_fmadd_ps(Y, Y,
+                   _mm256_mul_ps  (Z, Z)));
+
+        R = _mm256_rsqrt_ps(R);
+
+        _mm256_store_ps(x+i, _mm256_mul_ps(X, R));
+        _mm256_store_ps(y+i, _mm256_mul_ps(Y, R));
+        _mm256_store_ps(z+i, _mm256_mul_ps(Z, R));
+    }
+}</code></pre></p>
+                </section>
+
+                <!--<section><h4>Convertir entre AoS/SoA</h4>
+                <p>Se puede usar registros vectoriales para reorganizar AoS a SoA y al revés.</p>
+                <p><ol><li>Transpose 8 consecutive 3D vectors from AoS to SoA using 256-bit registers.</li>
+                       <li>Perform vectorised SIMD computation using SoA.</li>
+                       <li>Transpose result from SoA to AoS.</li></ol></p>
+                </section>
+
+                <section><h4>Shuffling between AoS/SoA</h4>
+                <img src="arquitecturas_modernas_figs/3-13_aos2soa.png">
+                </section>
+
+                <section><h4>Shuffling code: new instrinsics</h4>
+                <p><code>__m256 _mm256_shuffle_ps(__m256 m1, __m256 m2, const int sel)</code></p>
+                <p><code>sel</code> is a set of 4 2-bit values (four numbers between 0 and 3) used to select from the elements of <code>m1</code> and <code>m2</code> and then placed in output vector.</p>
+                <p>Example: shuffle operation 2 in diagram is implemented by:</p>
+                <p><pre><code>YZ = _mm256_shuffle_ps(M03, M14, _MM_SHUFFLE(1,0,2,1));</code></pre></p>
+                <p>The elements 1 and 2 from the first four elements of M03 are added to the new vector, then the elements 0 and 1 from the first four elements of M14 are added.</p>
+                </section>
+
+                <section><h4>Shuffling code: new intrinsics</h4>
+                <p><code>__m256 _mm256_castps128_ps256(__m128 a)</code></p>
+                <p>Typecasts a 128-bit vector into a 256-bit vector. Lower half of output vector contains values from source, upper half undefined.</p>
+                <p><code>__m256 _mm256_insertf128_ps(__m256 a, __m128 b, int offset)</code></p>
+                <p>Inserts a 128-bit vector into a 256-bit vector at a position given by <code>offset</code>.</p>
+                <p>For example, to insert two 128-bit registers <code>M[0]</code> and <code>M[3]</code> into a single 256-bit register <code>M03</code>:</p>
+                <p><pre><code class="language-c">M03 = _mm256_castps128_ps256(M[0]);
+M03 = _mm256_insertf128_ps(M03, M[3], 1);</code></pre></p>
+                </section>
+
+                <section><h4>Shuffling code</h4>
+                <p><pre><code class="language-c">#include &ltgsl/gsl_rng.h&gt
+#include &ltstdint.h&gt
+#include &ltstdio.h&gt
+#include &ltimmintrin.h&gt
+
+void aos_init(float* xyz, uint64_t length){
+  const gsl_rng_type* T;
+  gsl_rng* r;
+
+  gsl_rng_env_setup();
+  T = gsl_rng_default;
+  r = gsl_rng_alloc(T);
+
+  for (uint64_t i = 0; i &lt 3*length; i++){
+    xyz[i] = gsl_rng_uniform(r);
+  }
+}
+
+void avx_aos_norm(float* xyz, uint64_t length){
+  for (uint64_t i = 0; i &lt 3*length; i += 3*8){
+    /////////////////////////////////////////////
+    // AoS2SoA: XYZXYZXYZ --&gt XXX YYY ZZZ
+    /////////////////////////////////////////////
+  
+    // registers: note M is an SSE pointer (length 4)
+    __m128* M = (__m128*) (xyz+i);
+    __m256 M03, M14, M25;
+
+    // load lower halves
+    M03 = _mm256_castps128_ps256(M[0]);
+    M14 = _mm256_castps128_ps256(M[1]);
+    M25 = _mm256_castps128_ps256(M[2]);
+
+    // load upper halves
+    M03 = _mm256_insertf128_ps(M03, M[3], 1);
+    M14 = _mm256_insertf128_ps(M14, M[4], 1);
+    M25 = _mm256_insertf128_ps(M25, M[5], 1);
+
+    // shuffle
+    __m256 XY = _mm256_shuffle_ps(M14, M25, _MM_SHUFFLE(2,1,3,2));
+    __m256 YZ = _mm256_shuffle_ps(M03, M14, _MM_SHUFFLE(1,0,2,1));
+    __m256 X = _mm256_shuffle_ps(M03, XY, _MM_SHUFFLE(2,0,3,0));
+    __m256 Y = _mm256_shuffle_ps(YZ, XY, _MM_SHUFFLE(3,1,2,0));
+    __m256 Z = _mm256_shuffle_ps(YZ, M25, _MM_SHUFFLE(3,0,3,1));
+
+    //////////////////
+    // SoA computation
+    //////////////////
+    
+    // R &lt- X*X+Y*Y+Z*Z
+    __m256 R = _mm256_fmadd_ps(X, X,
+               _mm256_fmadd_ps(Y, Y,
+               _mm256_mul_ps  (Z, Z)));
+
+    // R &lt- 1/sqrt(R)
+    R = _mm256_rsqrt_ps(R);
+
+    // normalise vectors
+    X = _mm256_mul_ps(X, R);
+    Y = _mm256_mul_ps(Y, R);
+    Z = _mm256_mul_ps(Z, R);
+
+    /////////////////////////////////////
+    // SoA2AoS: XXX YYY ZZZ --&gt XYZXYZXYZ
+    /////////////////////////////////////
+
+    // shuffle
+    __m256 RXY = _mm256_shuffle_ps(X, Y, _MM_SHUFFLE(2,0,2,0));
+    __m256 RYZ = _mm256_shuffle_ps(Y, Z, _MM_SHUFFLE(3,1,3,1));
+    __m256 RZX = _mm256_shuffle_ps(Z, X, _MM_SHUFFLE(3,1,2,0));
+    __m256 R03 = _mm256_shuffle_ps(RXY, RZX, _MM_SHUFFLE(2,0,2,0));
+    __m256 R14 = _mm256_shuffle_ps(RYZ, RXY, _MM_SHUFFLE(3,1,2,0));
+    __m256 R25 = _mm256_shuffle_ps(RZX, RYZ, _MM_SHUFFLE(3,1,3,1));
+
+    // store in AoS
+    M[0] = _mm256_castps256_ps128(R03);
+    M[1] = _mm256_castps256_ps128(R14);
+    M[2] = _mm256_castps256_ps128(R25);
+    M[3] = _mm256_extractf128_ps(R03, 1);
+    M[4] = _mm256_extractf128_ps(R14, 1);
+    M[5] = _mm256_extractf128_ps(R25, 1);
+  }
+}
+
+int main(){
+  const uint64_t num_vectors = 1UL &lt&lt 28;
+  const uint64_t num_bytes = 3*num_vectors*sizeof(float);
+
+  float* xyz = (float*)_mm_malloc(num_bytes, 32);
+
+  aos_init(xyz, num_vectors);
+
+  avx_aos_norm(xyz, num_vectors);
+
+  _mm_free(xyz);
+}</code></pre></p>
+                <p><code>gcc -march=skylake vector_norms.c -o vector_norms.x -lgsl -lcblas</code></p>
+                <p>Example in book: speedup of 2.2 compared to AoS norm</p>
+                </section>-->
+
+                <section><h3>Convenciones de nombres en AVX</h3>
+                <table><tr><td>__m256</td><td>256-bit registro para $8$ valores de <code>float</code></td></tr>
+                       <tr><td>__m256d</td><td>256-bit registro para $4$ valores de <code>double</code></td></tr>
+                       <tr><td>__m256i</td><td>256-bit registro para <code>int</code></td></tr>
+                       <tr><td>__m128</td><td>128-bit registro para $4$ <code>floats</code></td></tr>
+                       <tr><td>__m128d</td><td>128-bit registro para $2$ <code>double</code></td></tr></table>
+                <p>Funciones: <code>_mm256_&ltoperator&gt_&ltsuffix&gt(data_type param1, data_type param2, data_type param3)</code></p>
+                <p>Los operadores son <code>add</code>, <code>sub</code>, etc. Sufijo corresponde al tipo de datos en lo cuál estamos actuando.</p>
+                <p>Esta información es de la página web de Intel, pero AVX está disponible también con AMD.</p>
+                </section>
+
+			</div>
+		</div>
+
+<script>
+
+require(
+    {
+      // it makes sense to wait a little bit when you are loading
+      // reveal from a cdn in a slow connection environment
+      waitSeconds: 15
+    },
+    [
+      "https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/lib/js/head.min.js",
+      "https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/js/reveal.js"
+    ],
+
+    function(head, Reveal){
+
+        // Full list of configuration options available here: https://github.com/hakimel/reveal.js#configuration
+        Reveal.initialize({
+            controls: true,
+            progress: true,
+            history: true,
+
+            transition: "slide",
+
+            // Optional libraries used to extend on reveal.js
+            dependencies: [
+                { src: "https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/plugin/highlight/highlight.js", async: true, callback: function() { hljs.initHighlightingOnLoad();} }
+            ]
+        });
+
+        var update = function(event){
+          if(MathJax.Hub.getAllJax(Reveal.getCurrentSlide())){
+            MathJax.Hub.Rerender(Reveal.getCurrentSlide());
+          }
+        };
+
+        Reveal.addEventListener('slidechanged', update);
+
+        function setScrollingSlide() {
+            var scroll = false
+            if (scroll === true) {
+              var h = $('.reveal').height() * 0.95;
+              $('section.present').find('section')
+                .filter(function() {
+                  return $(this).height() > h;
+                })
+                .css('height', 'calc(95vh)')
+                .css('overflow-y', 'scroll')
+                .css('margin-top', '20px');
+            }
+        }
+
+        // check and set the scrolling slide every time the slide change
+        Reveal.addEventListener('slidechanged', setScrollingSlide);
+
+    }
+
+);
+</script>
+	</body>
+</html>

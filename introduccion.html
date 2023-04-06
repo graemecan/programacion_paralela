@@ -101,8 +101,7 @@ if( window.location.search.match( /print-pdf/gi ) ) {
                 </section>
 
                 <section><h2>Programa del curso</h2>
-                <p><ul><li>Introducción</li>
-                       <li>Fundamentos Teóricos</li>
+                <p><ul><li>Introducción, conceptos y fundamentos teóricos</li>
                        <li>Cache, vectorización (SIMD)</li>
                        <li>OpenMP</li>
                        <li>MPI</li>
@@ -122,7 +121,7 @@ if( window.location.search.match( /print-pdf/gi ) ) {
                 </section>
 
                 <section><h4>El proceso de compilación</h4>
-                    <img src="introduction_figs/compilacion.jpeg">
+                    <img src="introduccion_figs/compilacion.jpeg">
                 </section>
 
                 <section><h4>Hola Mundo</h4>
@@ -150,11 +149,11 @@ int main(){
                </section>
 
                <section><h4>Tipos enteros</h4>
-                    <img src="introduction_figs/integer_types.png">
+                    <img src="introduccion_figs/integer_types.png">
                </section>
 
                <section><h4>Tipos reales</h4>
-                    <img src="introduction_figs/real_types.png">
+                    <img src="introduccion_figs/real_types.png">
                </section>
 
                <section><h4>Imprimir valores de variables</h4>
@@ -171,7 +170,7 @@ int main(){
                 </section>
 
                 <section><h4>Especificadores de formato</h4>
-                    <img src="introduction_figs/especificadores.jpg">
+                    <img src="introduccion_figs/especificadores.jpg">
                 </section>
 
                 <section>
@@ -458,10 +457,10 @@ int main(){
                 <section><h4><i>Stack</i> vs. <i>heap</i></h4>
                     <div class="container">
                     <div class="col">
-                    <img src="introduction_figs/stack_heap_code.png">
+                    <img src="introduccion_figs/stack_heap_code.png">
                     </div>
                     <div class="col">
-                    <img src="introduction_figs/stack_heap.jpg">
+                    <img src="introduccion_figs/stack_heap.jpg">
                     </div>
                     </div>
                     <p>El espacio de <i>stack</i> está limitado para cada proceso. En linux se puede usar <code>ulimit -a</code> para ver cuanto hay.</p>
@@ -530,7 +529,7 @@ int main(){
                 </section>
 
                 <section><h4>Organización de la memoria</h4>
-                    <img src="introduction_figs/row-major-2D.png">
+                    <img src="introduccion_figs/row-major-2D.png">
                     <ul><li>Arrays en C están guardados en "orden de fila mayor" (<i>row-major order</i>).</li>
                         <li><code>phi[xN][yN]</code> corresponde a un array de punteros...</li></ul>
                 </section>
@@ -740,7 +739,7 @@ int main(){
                 </section>
 
                 <section><h4>Ejemplo - simulaciones numéricas</h4>
-                <img src="introduction_figs/climate_model_grid.png">
+                <img src="introduccion_figs/climate_model_grid.png">
                 </section>
 
                 <section><h4>Ejemplo - simulaciones numéricas</h4>
@@ -749,7 +748,7 @@ int main(){
                 </section>
 
                 <section><h4>Ejemplo - análisis de datos</h4>
-                <img src="introduction_figs/data_model.png">
+                <img src="introduccion_figs/data_model.png">
                 </section>
 
                 <section><h3>Conceptos básicos</h3>
@@ -787,7 +786,7 @@ int main(){
                 </section>
 
                 <section><h4>Ejemplo simple: sumar un array</h4>
-                <img src="introduction_figs/example1.png" width=600>
+                <img src="introduccion_figs/example1.png" width=600>
                 </section>
 
                 <section><h4>Ejemplo simple: sumar un array</h4>
@@ -803,7 +802,7 @@ int main(){
                 </section>
 
                 <section><h4>Ejemplo simple: sumar un array</h4>
-                <img src="introduction_figs/example2.png" width=400>
+                <img src="introduccion_figs/example2.png" width=400>
                 </section>
 
                 <section><h4>Ejemplo simple: sumar un array</h4>
@@ -825,7 +824,7 @@ int main(){
                 </section>
 
                 <section><h4>Ejemplo simple: sumar un array</h4>
-                <img src="introduction_figs/strong_scalability_figure.png" width="800">
+                <img src="introduccion_figs/strong_scalability_figure.png" width="800">
                 <p>Algoritmo no tiene escalabilidad fuerte</p>
                 </section>
 
@@ -834,7 +833,7 @@ int main(){
                 </section>
 
                 <section><h4>Ejemplo simple: sumar un array</h4>
-                <img src="introduction_figs/weak_scalability_figure.png">
+                <img src="introduccion_figs/weak_scalability_figure.png">
                 <p>Algoritmo tiene escalabilidad <b>débil</b>.</p>
                 </section>
 
@@ -869,11 +868,85 @@ int main(){
                        <li>La eficiencia de la paralelizacion depende del número de EPs y $\gamma$. Es una función monótona en ambos parámetros.</li></ul></p>
                 </section>
 
+                <section><h3>Las leyes de Amdahl y Gustafson</h3>
+                <p>Método teórico para obtener un límite máximo del speedup posible por la paralelización del programa.</p>
+                <p>Dividimos el programa en dos partes:</p>
+                <p><ul><li>$T_{sec}$: parte que es secuencial, i.e. no beneficia de la paralelización o no se puede paralelizar.</li>
+                       <li>$T_{par}$: parte que puede beneficiar de la paralelización.</li></ul></p>
+                </section>
+
+                <section><h4>Las leyes de Amdahl y Gustafson</h4>
+                <p>Tiempo de ejecución del programa en un sólo procesador es $T(1) = T_{sec} + T_{par}$.</p>
+                <p>Suponer que el mejor speedup posible es lineal, así que parte en paralelo corre $p$ veces más rápido en $p$ procesadores (parte secuencial no cambia su tiempo de ejecución): $T(p) \geq T_{sec} + \frac{T_{par}}{p}$</p>
+                <p>$$S(p) = \frac{T(1)}{T(p)} \leq \frac{T_{sec} + T_{par}}{T_{sec} + \frac{T_{par}}{p}}$$</p>
+                </section>
+
+                <section><h4>Las leyes de Amdahl y Gustafson</h4>
+                <p>Introducimos el parámetro $f$ tal que $T_{sec} = f \cdot T(1)$ y $T_{par} = (1-f)\cdot T(1)$.</p>
+                <p>$S(p) = \frac{T(1)}{T(p)} \leq \frac{T_{sec} + T_{par}}{T_{sec} + \frac{T_{par}}{p}} = \frac{f\cdot T(1) + (1-f)\cdot T(1)}{f\cdot T(1) + \frac{(1-f)\cdot T(1)}{p}} = \frac{1}{f+\frac{1-f}{p}}$.</p>
+                <p>Esta formula se llama la <b>ley de Amdahl</b>.
+                </section>
+
+                <section><h4>Ejemplos de la ley de Amdahl</h4>
+                <p><b>Ejemplo 1</b>: 95% del tiempo de ejecución se pasa en un ciclo que queremos paralelizar. Speedup máximo posible en $6$ procesadores es: $S(6) \leq 1/(0.05 + 0.95/6) = 4.8$.</p>
+                <p><b>Ejemplo 2</b>: 10% del tiempo de ejecución se pasa en código secuencial, límite del speedup posible es: $S(\infty) \leq \lim_{p \to \infty} \frac{1}{0.1 + 0.9/p} = 10$.</p>
+                <p>Limitación importante de la ley de Amdahl: tamaño del problema es constante (escalabilidad fuerte)</p>
+                </section>
+
+                <section><h4>Una ley más general que incluye variación del tamaño del problema</h4>
+                <p><ul><li>$\alpha$: factor aplicado a la parte secuencial por el cambio en el tamaño de los datos.</li>
+                       <li>$\beta$: como $\alpha$, pero para la parte paralelizada.</li></ul></p>
+                <p>$T_{\alpha \beta}(1) = \alpha \cdot T_{sec} + \beta \cdot T_{par} = \alpha \cdot f \cdot T(1) + \beta \cdot (1-f) \cdot T(1)$</p>
+                <p>$S_{\alpha \beta}(p) = \frac{T_{\alpha \beta}(1)}{T_{\alpha \beta}(p)} \leq \frac{\alpha \cdot f + \beta \cdot (1-f)}{\alpha \cdot f + \frac{\beta \cdot (1-f)}{p}}$</p>
+                </section>
+
+                <section><h4>Una ley más general que incluye variación del tamaño del problema</h4>
+                <p>Ahora definimos $\gamma = \beta/\alpha$ y reformulamos el speedup: $$S_{\gamma}(p) \leq \frac{f + \gamma \cdot (1-f)}{f + \frac{\gamma \cdot (1-f)}{p}}$$</p>
+                <p><ul><li>$\gamma = 1$: corresponde a la ley de Amdahl.</li>
+                       <li>$\gamma = p$: tiempo para la parte paralelizada crece linealmente en $p$ mientras la parte secuencial es constante $\rightarrow$ la ley de Gustafson: $S(p) \leq f + p\cdot (1-f) = p + f \cdot (1-p)$.</li></ul></p>
+                </section>
+
+                <section><h4>Ejemplos de la ley general</h4>
+                <p><b>Ejemplo 1</b>: problema que es 15% secuencial y 85% paralelizable linealmente. Suponiendo que el tiempo secuencial no crece con el tamaño del problema:</p>
+                <p><ul><li>(i) Con $50$ procesadores y sin escalamiento del tamaño del problema obtenemos un speedup de $S_{\gamma = 1}(50) \leq 1/(0.15 + 0.85/50) = 5.99$.</li>
+                <li>(ii) Ahora crece el tamaño del problema por un factor de $100$: $S_{\gamma = 100}(50) \leq (0.15 + 100 \cdot 0.85)/(0.15 + (100 \cdot 0.85)/50) = 46.03$.</li></ul></p>
+                </section>
+
+                <section><h4>Ejemplos de la ley general</h4>
+                <p><b>Ejemplo 2</b>: queremos un speedup de $100$ en $128$ procesadores.</p>
+                <p><ul><li>(i) Cuánto es la fracción secuencial máxima cuando el speedup se logra bajo las condiciones de escalabilidad fuerte? Utilizar la ley de Amdahl: $100 = 1/(f + (1-f)/128)$ entonces $f = 0.28/127 = 0.0022$. Menos que 1%!</li>
+                <li>(ii) Cuánto es la fracción secuencial máxima considerando escalabilidad débil y un $\gamma$ que crece linealmente? Utilizar la ley de Gustafson: $100 = 128 + f \cdot (1-128)$ entonces $f = 28/127 = 0.22$. Así que la fracción secuencial puede ser mayor en condiciones de escalabilidad débil.</li></ul></p>
+                </section>
+
+                <section><h4>Ley general: speedup y eficiencia</h4>
+                <p>Parameterizar $\gamma(p,\delta) = p^{\delta}$. Así que $\delta = 0$ es la ley de Amdahl, y $\delta = 1$ es la ley de Gustafson.</p>
+                <p>$S_{\gamma}(p) = \frac{f + (1-f)p^{\delta}}{f+(1-f)p^{\delta - 1}} \quad \quad E_{\gamma}(p) = \frac{f+(1-f)p^{\delta}}{pf + (1-f)p^{\delta}}$</p>
+                <p>Para $\delta \leq 0$ el speedup está acotado por $1$ o $1/f$:</p> 
+                <p>$\lim_{p \to \infty} S_{\gamma}(p) |_{\delta < 0} = 1 \quad \quad \lim_{p \to \infty} S_{\gamma}(p) |_{\delta = 0} = \frac{1}{f}$</p>
+                </section>
+
+                <section><h4>Ley general: speedup y eficiencia</h4>
+                <p>Para $\delta > 0$ hay un speedup ilimitado en el límite $p \to \infty$. Así que podemos obtener cualquier speedup siempre y cuando $\gamma$ depende monótonamente en $p$.</p>
+                <img src="introduccion_figs/speedup_2_12.png">
+                </section>
+
+                <section><h4>Ley general: speedup y eficiencia</h4>
+                <div class="container">
+                <div class="col">
+                <p>La eficiencia $E_{\gamma}(p)$ tiende a $(1-f)$ en el límite para $\delta = 1$ y desaparece para $\delta = 0$.</p>
+                <p>A veces es útil encontrar las líneas de eficiencia constante en el espacio de parámetros (<b>líneas de iso-eficiencia</b>).</p>
+                <p><b>Función de iso-eficiencia</b>: escalamiento del tamaño del problema requerido para mantener una eficiencia constante.</p>
+                </div>
+                <div class="col">
+                <img src="introduccion_figs/isoefficiency_2_13.png">
+                </div>
+                </section>
+
                 <section><h3>Memoria distribuida/compartida</h3>
                 </section>
 
                 <section><h4>Sistemas con memoria distribuida</h4>
-                <img src="introduction_figs/distributed_memory.png">
+                <img src="introduccion_figs/distributed_memory.png">
                 </section>
 
                 <section><h4>Sistemas con memoria distribuida</h4>
@@ -892,17 +965,17 @@ int main(){
 
                 <section><h4>Sistemas con memoria distribuida</h4>
                 <p>La partición de los datos es un problema clave en la programación de sistemas con memoria distribuida.</p>
-                <img src="introduction_figs/partition_8x8_figure.png" width=500>
+                <img src="introduccion_figs/partition_8x8_figure.png" width=500>
                 <p>Ejemplo de una partición un array $8 \times 8$ en $4$ procesos: cada uno tiene una submatriz $4 \times 4$.</p>
                 </section>
 
                 <section><h4>Sistemas con memoria distribuida</h4>
                 <div class="container">
                 <div class="col">
-                <img src="introduction_figs/stencil.png" height=300>
+                <img src="introduccion_figs/stencil.png" height=300>
                 </div>
                 <div class="col">
-                <img src="introduction_figs/partition_8x8_figure.png" height=300>
+                <img src="introduccion_figs/partition_8x8_figure.png" height=300>
                 </div>
                 </div>
                 <p>Código de plantilla (<i>stencil</i>): plantilla de 5 puntos requiere que cada proceso guarde una fila y columna adicional, para recibir datos de otro proceso. También tiene que mandar una fila y columna a otro proceso.</p>
@@ -915,24 +988,32 @@ int main(){
                 </section>
 
                 <section><h4>Caso de estudio: ecuación de Poisson</h4>
-                <p>Vamos a resolver la ecuación en una grilla discretizada:</p>
-                <img src="introduction_figs/poisson.jpg" height=400>
+                <p>Se puede resolver la ecuación usando diferencias finitas en una grilla discretizada:</p>
+                <img src="introduccion_figs/poisson.jpg" height=400>
+                </section>
+
+                <section><h4>Caso de estudio: ecuación de Poisson</h4>
+                <img src="introduccion_figs/poisson.png" width=1200>
                 </section>
 
                 <section><h3>Paralelismo básico: sistemas de memoria compartida</h3>
                 <p>Todos los CPUs tienen acceso a un espacio común de memoria. Ejemplo: notebook con procesador de multinúcleo (Intel i3, i5, i7 etc.)</p>
                 <p>Cada <i>core</i> típicamente tiene memoria (super-)local (cache de nivel 1) para reducir acceso a la memoria principal (cuello de botella de von Neumann).</p>
-                <img src="introduction_figs/von_nuemann.webp" height=300>
+                <img src="introduccion_figs/von_nuemann.webp" height=300>
                 </section>
 
                 <section><h3>Paralelismo básico: sistemas de memoria compartida</h3>
                 <p>Con memoria compartida típicmente se utiliza <i>multithreading</i>.</p>
-                <img src="introduction_figs/multithreading.jpg" height=400>
+                <img src="introduccion_figs/multithreading.jpg" height=400>
                 </section>
 
                 <section><h3>Paralelismo básico: sistemas de memoria compartida</h3>
-                <p>Los hilos (threads) comparten memoria simultaneamente: hay que tener cuidado para evitar <span style="color:red">condiciones de carrera</span> (<i>race conditions</i>).
+                <p>Los hilos (threads) comparten memoria simultaneamente: hay que tener cuidado para evitar <span style="color:red">condiciones de carrera</span> (<i>race conditions</i>).</p>
                 <p>Este es cuando dos hilos acceden a la misma variable compartida simultaneamente (sin <i>locking</i> o sincronización).</p>
+                </section>
+
+                <section><h3>Condición de carrera</h3>
+                <img src="introduccion_figs/multithreadingfinal.png">
                 </section>
 
                 <section><h3>Paralelismo básico: sistemas de memoria compartida</h3>
@@ -956,24 +1037,24 @@ int main(){
                 </section>
 
                 <section><h4>Diseño del algoritmo: como paralelizar</h4>
-                <img src="introduction_figs/prefix_sum_figure.png">
+                <img src="introduccion_figs/prefix_sum_figure.png">
                 </section>
 
                 <section><h4>Diseño del algoritmo: partición de datos</h4>
                 <p>Considerar el código de <i>stencil</i> que vimos antes. La partición de datos determina la estrategia de comunicación.</p>
                 <p><i>Embarrassingly parallel problems</i> involucran operaciones independientes (sin comunicación) y son fáciles de paralelizar.</p>
-                <img src="introduction_figs/partition_8x8_figure.png" height=300>
+                <img src="introduccion_figs/partition_8x8_figure.png" height=300>
                 </section>
 
                 <section><h4>Diseño del algoritmo: sincronización</h4>
                 <p>Considerar el código de <i>stencil</i> que vimos antes. Quizás será necesario sincronizar para asegurar que todos los valores en las filas/columnas comunicadas estén calculados antes de mandar/recibir.</p>
-                <img src="introduction_figs/partition_8x8_figure.png" height=300>
+                <img src="introduccion_figs/partition_8x8_figure.png" height=300>
                 </section>
 
                 <section><h4>Diseño del algoritmo: paralelismo de tareas</h4>
                 <p>Asignar tareas distintas a cada proceso/thread.</p>
                 <p>Ejemplo con clasificación de imágenes: clasificador binario diferente en cada procesador, con los resultados combinados al final.</p>
-                <img src="introduction_figs/ternary_classifier_figure.png">
+                <img src="introduccion_figs/ternary_classifier_figure.png">
                 </section>
 
                 <section><h4>Diseño del algoritmo: balanceo de carga</h4>
@@ -983,7 +1064,7 @@ int main(){
                 </section>
 
                 <section><h4>Diseño del algoritmo: paralelismo de modelo</h4>
-                <img src="introduction_figs/ann_gpu_figure.png" width=400>
+                <img src="introduccion_figs/ann_gpu_figure.png" width=400>
                 <p>Redes neuronales grandes y complejas pueden exceder la memoria disponible de un GPU.</p>
                 <p>Se puede implementar paralelismo del model donde los pesos de la red están distribuidas entre varios GPUs, y cada GPU trabaja en su parte del modelo.</p>
                 <p>Este requiere que el vector de salida de cada capa de la red entera esté recopilado en cada GPU antes de que se pueda calcular el próximo (i.e. se requiere comunicación y sincronización).</p>
